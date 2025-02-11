@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use League\OAuth2\Client\Provider\GenericProvider;
 use App\Models\User;
+use App\Enums\Roles;
 use App\Providers\RouteServiceProvider;
 
 class AuthController extends Controller
@@ -72,14 +73,16 @@ class AuthController extends Controller
                 abort(401, 'Compte supprimé ou désactivé');
             }
 
-            $user = User::updateOrCreate(
-                ['email' => $userDetails['email']],
-                [
-                    'firstName' => $userDetails['firstName'],
-                    'lastName' => $userDetails['lastName'],
-                ]
-            );
-
+            $user = User::where('email', $userDetails['email'])->first();
+            if($user){
+                $user->updateRole();
+            } else {
+                $user = new User();
+                $user->email = $userDetails["email"];
+                $user->firstName = $userDetails["firstName"];
+                $user->lastName = $userDetails["lastName"];
+                $user->updateRole();
+            }
             Auth::login($user);
 
             return redirect(RouteServiceProvider::HOME);
