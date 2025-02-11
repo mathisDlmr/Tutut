@@ -2,6 +2,17 @@
 
 return [
 
+    'oauth' => [
+        'client_id' => env('OAUTH_CLIENT_ID'),
+        'client_secret' => env('OAUTH_CLIENT_SECRET'),
+        'redirect_uri' => env('OAUTH_REDIRECT_URI', env('BASE_URL').'tutut/auth/callback'),
+        'scopes' => env('OAUTH_SCOPES', 'users-infos'),
+        'authorize_url' => env('OAUTH_AUTHORIZE_URL', 'https://auth.assos.utc.fr/oauth/authorize'),
+        'access_token_url' => env('OAUTH_ACCESS_TOKEN_URL', 'https://auth.assos.utc.fr/oauth/token'),
+        'owner_details_url' => env('OAUTH_RESOURCE_OWNER_DETAILS', 'https://auth.assos.utc.fr/api/user'),
+        'logout_url' => env('OAUTH_LOGOUT_URL', 'https://auth.assos.utc.fr/logout'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Defaults
