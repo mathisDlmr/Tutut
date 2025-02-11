@@ -9,6 +9,8 @@ class EmployedTutorList extends Model
 {
     use HasFactory;
 
+    protected $table = 'employed_tutors_list';
+
     protected $fillable = ['email'];
 
     public static function hasEmail(string $email): bool

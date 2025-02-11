@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use App\Enums\Roles;
 
-class User extends Model
+class User extends Authenticatable implements HasName
 {
     use HasFactory;
 
@@ -34,5 +36,15 @@ class User extends Model
             $this->role = Roles::Tutee;  // Par défaut un user est Tutee
         }
         $this->save();
+    }
+
+    public function getFilamentName(): string
+    {
+        return ($this->firstName." ".$this->lastName);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
     }
 }

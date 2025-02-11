@@ -2,6 +2,8 @@
 
 return [
 
+    'app_no_login' => env('APP_NO_LOGIN', false),
+
     'oauth' => [
         'client_id' => env('OAUTH_CLIENT_ID'),
         'client_secret' => env('OAUTH_CLIENT_SECRET'),

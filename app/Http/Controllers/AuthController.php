@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use League\OAuth2\Client\Provider\GenericProvider;
 use App\Models\User;
-use App\Enums\Roles;
 use App\Providers\RouteServiceProvider;
 
 class AuthController extends Controller
@@ -32,6 +31,8 @@ class AuthController extends Controller
             try {
                 $userID=env('USER_ID');
                 $user=User::find($userID);
+                $user->updateRole();
+
                 Auth::login($user);
 
                 return redirect(RouteServiceProvider::HOME);
@@ -83,6 +84,7 @@ class AuthController extends Controller
                 $user->lastName = $userDetails["lastName"];
                 $user->updateRole();
             }
+
             Auth::login($user);
 
             return redirect(RouteServiceProvider::HOME);

@@ -9,6 +9,8 @@ class AdminList extends Model
 {
     use HasFactory;
 
+    protected $table = 'admin_list';
+
     protected $fillable = ['email'];
 
     public static function hasEmail(string $email): bool
