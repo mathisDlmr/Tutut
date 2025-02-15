@@ -42,9 +42,4 @@ class User extends Authenticatable implements HasName
     {
         return ($this->firstName." ".$this->lastName);
     }
-
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return true;
-    }
 }
