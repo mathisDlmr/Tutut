@@ -1,15 +1,24 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Widgets\Admin;
 
+use App\Enums\Roles;
 use App\Models\User;
 use App\Models\Creneaux;
 use App\Models\Inscription;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardStatsWidget extends BaseWidget
 {
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+
+        return $user && $user->role === Roles::Administrator->value;
+    }
+
     protected function getStats(): array
     {
         $tutorCount = User::whereIn('role', ['tutor', 'employed_tutor'])->count();
