@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Auth;
 class TuteursEmployesResource extends Resource
 {
     protected static ?string $model = EmployedTutorList::class;
-    protected static ?string $label = 'Tuteurs Emploi Etu';
-    protected static ?string $pluralLabel = 'Tuteurs Emploi Etu';
+    protected static ?string $label = 'Tuteur.ice.s Emploi Etu';
+    protected static ?string $pluralLabel = 'Tuteur.ice.s Emploi Etu';
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     public static function canAccess(): bool

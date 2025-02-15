@@ -15,25 +15,27 @@ use Illuminate\Support\Facades\Auth;
 class FeedbackResource extends Resource
 {
     protected static ?string $model = Feedback::class;
-    protected static ?string $label = 'Feedbacks';
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
 
     public static function canAccess(): bool
     {
-        $user = Auth::user();
+        return true;
+    }
 
-        return $user && $user->role === Roles::Administrator->value;
-    }    
+    public static function getLabel(): string
+    {
+        return Auth::user()->role === Roles::Tutee->value ? 'Mes Feedbacks' : 'Feedbacks';
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('tutee')
-                    ->required()
-                    ->numeric(),
+                Forms\Components\Hidden::make('tutee_id')
+                    ->default(Auth::id()),
                 Forms\Components\TextInput::make('text')
-                    ->required(),
+                    ->required()
+                    ->label('Donnez-nous votre avis !'),
             ]);
     }
 
@@ -41,31 +43,30 @@ class FeedbackResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('tutee')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('text')
+                    ->label('')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn ($record) => Auth::id() === $record->tutee_id),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn ($records) => 
+                            Auth::user()->role === Roles::Administrator->value || 
+                            $records->every(fn ($record) => $record->tutee_id === Auth::id())
+                        ),
                 ]),
-            ]);
+            ])            
+            ->modifyQueryUsing(fn ($query) => $query->when(Auth::user()->role === Roles::Tutee->value, fn ($query) => $query->where('tutee_id', Auth::id()))
+        )
+        ->defaultSort('created_at', 'desc')
+        ->recordUrl(null);
     }
 
     public static function getRelations(): array
@@ -73,6 +74,11 @@ class FeedbackResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()->role !== Roles::Administrator->value;
     }
 
     public static function getPages(): array
@@ -84,51 +90,3 @@ class FeedbackResource extends Resource
         ];
     }
 }
-
-/*
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
-    protected static ?string $navigationGroup = 'Administration';
-    protected static ?string $label = 'Feedbacks';
-
-    public static function form(Forms\Form $form): Forms\Form
-    {
-        return $form
-            ->schema([
-                Textarea::make('text')
-                    ->label('Feedback')
-                    ->disabled(),
-            ]);
-    }
-
-    public static function table(Tables\Table $table): Tables\Table
-    {
-        return $table
-            ->columns([
-                TextColumn::make('tutee.firstName')->label('Prénom')->sortable(),
-                TextColumn::make('tutee.lastName')->label('Nom')->sortable(),
-                TextColumn::make('text')->label('Feedback')->limit(50)->sortable(),
-                TextColumn::make('created_at')->label('Date')->date(),
-            ])
-            ->filters([])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListFeedback::route('/'),
-        ];
-    }
-}
-    */
