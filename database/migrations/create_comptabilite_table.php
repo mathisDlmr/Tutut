@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employed_tutors_list', function (Blueprint $table) {
+        Schema::create('comptabilite', function (Blueprint $table) {
             $table->id();
-            $table->string('email', 200)->unique();
+            $table->float('nb_heures');
+            $table->string('commentaire', 255);
+            $table->string('commentaire_bve', 255);
+            $table->foreignId('fk_user')->constrained('users', 'id');
+            $table->foreignId('fk_semaine')->constrained('semaines', 'numero');
             $table->timestamps();
         });
     }
@@ -23,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('employed_tutors_list');
+        Schema::dropIfExists('comptabilite');
     }
 };

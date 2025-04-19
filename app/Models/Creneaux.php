@@ -11,5 +11,21 @@ class Creneaux extends Model
 
     protected $table = 'creneaux';
 
-    protected $fillable = ['tutor1_id','tutor2_id','start','end'];
+    protected $fillable = ['tutor1_id','tutor2_id','fk_semaine','fk_salle','open','start','end'];
+
+    public function tutor1()
+    {
+        return $this->belongsTo(User::class, 'tutor1_id');
+    }
+
+    public function tutor2()
+    {
+        return $this->belongsTo(User::class, 'tutor2_id');
+    }
+
+    public function semaine()
+    {
+        return $this->belongsTo(\App\Models\Semaine::class, 'fk_semaine');
+    }
+    
 }

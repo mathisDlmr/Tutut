@@ -12,4 +12,14 @@ class Inscription extends Model
     protected $table = 'inscription';
 
     protected $fillable = ['tutee_id','creneau_id','enseignements_souhaites'];
+
+    public function tutee()
+    {
+        return $this->belongsTo(User::class, 'tutee_id');
+    }
+
+    public function creneau()
+    {
+        return $this->belongsTo(Creneaux::class, 'creneau_id');
+    }
 }

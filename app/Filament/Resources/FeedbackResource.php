@@ -55,14 +55,7 @@ class FeedbackResource extends Resource
                     ->visible(fn ($record) => Auth::id() === $record->tutee_id),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                    ->visible(fn () => Auth::user()->role === Roles::Administrator->value)
-                    ->authorize(fn ($records) => 
-                        Auth::user()->role === Roles::Administrator->value || 
-                        collect($records)->every(fn ($record) => $record->tutee_id === Auth::id())
-                    )                    
-                ]),
+                //
             ])            
             ->modifyQueryUsing(fn ($query) => $query->when(Auth::user()->role === Roles::Tutee->value, fn ($query) => $query->where('tutee_id', Auth::id()))
         )

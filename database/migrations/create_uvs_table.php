@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('admin_list', function (Blueprint $table) {
-            $table->id();
-            $table->string('email', 200)->unique();
+        Schema::create('uvs', function (Blueprint $table) {
+            $table->string('code', 4)->primary();
+            $table->string('intitule');
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('admin_list');
+        Schema::dropIfExists('uvs');
     }
 };

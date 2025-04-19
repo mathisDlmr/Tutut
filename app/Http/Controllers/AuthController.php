@@ -31,8 +31,6 @@ class AuthController extends Controller
             try {
                 $userID=env('USER_ID');
                 $user=User::find($userID);
-                $user->updateRole();
-
                 Auth::login($user);
 
                 return redirect(RouteServiceProvider::HOME);
@@ -75,18 +73,13 @@ class AuthController extends Controller
             }
 
             $user = User::where('email', $userDetails['email'])->first();
-            if($user){
-                $user->updateRole();
-            } else {
-                $user = new User();
-                $user->email = $userDetails["email"];
+            if(!$user->firstName){
                 $user->firstName = $userDetails["firstName"];
                 $user->lastName = $userDetails["lastName"];
-                $user->updateRole();
-            }
+                $user->save();
+            } 
 
             Auth::login($user);
-
             return redirect(RouteServiceProvider::HOME);
         } catch (\Exception $e) {
             abort(400, 'Callback error : ' . $e->getMessage());

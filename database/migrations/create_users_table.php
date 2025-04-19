@@ -17,8 +17,8 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) use ($roles) {
             $table->id('id');
             $table->string('email', 200);
-            $table->string('firstName', 100);
-            $table->string('lastName', 100);
+            $table->string('firstName', 100)->nullable();
+            $table->string('lastName', 100)->nullable();
             $table->enum('role', $roles)->default('tutee');
             $table->timestamps();
         });

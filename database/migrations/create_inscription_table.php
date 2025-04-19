@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('inscription', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tutee_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('creneau_id')->nullable()->constrained('creneaux')->onDelete('cascade');
+            $table->foreignId('creneau_id')->constrained('creneaux')->onDelete('cascade');
             $table->json('enseignements_souhaites');
             $table->timestamps();
         });
