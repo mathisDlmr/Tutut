@@ -2,7 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\SendEmail;
 use App\Filament\Pages\TutorManageUvs;
+use App\Filament\Resources\Admin\EmailResource;
 use App\Filament\Resources\Admin\SalleResource;
 use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
 use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
@@ -57,6 +59,7 @@ class AdminPanelProvider extends PanelProvider
                 TuteeInscriptionCreneauResource::class,
             ])
             ->pages([
+                SendEmail::class,
                 TutorManageUvs::class,
             ])            
             ->middleware([
