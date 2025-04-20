@@ -13,6 +13,11 @@ class Creneaux extends Model
 
     protected $fillable = ['tutor1_id','tutor2_id','fk_semaine','fk_salle','open','start','end'];
 
+    protected $casts = [
+        'start' => 'datetime',
+        'end' => 'datetime',
+    ];    
+
     public function tutor1()
     {
         return $this->belongsTo(User::class, 'tutor1_id');
@@ -26,6 +31,5 @@ class Creneaux extends Model
     public function semaine()
     {
         return $this->belongsTo(\App\Models\Semaine::class, 'fk_semaine');
-    }
-    
+    }    
 }
