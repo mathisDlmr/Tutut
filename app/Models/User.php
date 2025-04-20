@@ -12,7 +12,7 @@ class User extends Authenticatable implements HasName
 {
     use HasFactory;
 
-    protected $fillable = ['email', 'firstName', 'lastName', 'role', 'locale'];
+    protected $fillable = ['email', 'firstName', 'lastName', 'role'];
 
     public function getFilamentName(): string
     {
