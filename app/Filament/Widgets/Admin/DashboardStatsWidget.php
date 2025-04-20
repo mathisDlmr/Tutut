@@ -3,8 +3,10 @@
 namespace App\Filament\Widgets\Admin;
 
 use App\Enums\Roles;
+use App\Filament\Resources\FeedbackResource;
 use App\Models\User;
 use App\Models\Creneaux;
+use App\Models\Feedback;
 use App\Models\Inscription;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -37,4 +39,42 @@ class DashboardStatsWidget extends BaseWidget
             Stat::make('Moyenne des tuteurs par créneau', $averageTuteesPerCreneaux),
         ];
     }
+}
+
+
+
+
+
+
+
+
+
+protected function getResourcesForUser(): array
+{
+    $user = auth()->user();
+
+    if (!$user || !$user->role instanceof Roles) {
+        return [];
+    }
+
+    return match ($user->role) {
+        Roles::Administrator => [
+            TuteursEmployesResource::class,
+            SemestreResource::class,
+            SemaineResource::class,
+            Salle::class,
+        ],
+        Roles::EmployedPrivilegedTutor => [
+            SemestreResource::class,
+            SemaineResource::class,
+            Salle::class,
+        ],
+        Roles::EmployedTutor => [
+        ],
+        Roles::Tutor => [
+        ],
+        Roles::Tutee => [
+        ],
+        default => []
+    };
 }

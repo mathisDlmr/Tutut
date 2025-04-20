@@ -1,29 +1,22 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Admin;
 
 use App\Filament\Resources\Admin\SalleResource\Pages;
 use App\Models\Salle;
-use App\Models\DispoSalle;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 use App\Enums\Roles;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class SalleResource extends Resource
 {
@@ -33,8 +26,9 @@ class SalleResource extends Resource
     public static function canAccess(): bool
     {
         $user = Auth::user();
-        return $user && ($user->role === Roles::Administrator->value || $user->role === Roles::EmployedPrivilegedTutor->value);
-    }
+        return $user && (Auth::user()->role === Roles::Administrator->value ||
+               Auth::user()->role === Roles::EmployedPrivilegedTutor->value);
+    }   
 
     public static function form(Form $form): Form
     {

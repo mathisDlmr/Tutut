@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Admin;
 
 use App\Filament\Resources\Admin\TuteursEmployesResource\Pages;
 use App\Models\User;
 use App\Enums\Roles;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Filters\MultiSelectFilter;
 
@@ -22,9 +22,8 @@ class TuteursEmployesResource extends Resource
     public static function canAccess(): bool
     {
         $user = Auth::user();
-
-        return $user && $user->role === Roles::Administrator->value;
-    }
+        return $user && Auth::user()->role === Roles::Administrator->value;
+    }     
 
     public static function getLabel(): string
     {

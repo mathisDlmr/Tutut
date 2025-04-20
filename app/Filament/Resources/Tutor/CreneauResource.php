@@ -1,22 +1,16 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Tutor;
 
 use App\Filament\Resources\Tutor\CreneauResource\Pages;
-use App\Filament\Resources\Tutor\CreneauResource\RelationManagers;
 use App\Models\Creneaux;
-use App\Models\Semaine;
-use App\Models\Salle;
-use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\Layout\Stack;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\User;
+use App\Enums\Roles;
 use Illuminate\Support\Facades\Auth;
 
 class CreneauResource extends Resource
@@ -25,6 +19,14 @@ class CreneauResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-clock';
     protected static ?string $navigationLabel = 'Shotgun Créneaux';
     protected static ?string $pluralModelLabel = 'Créneaux';
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user && (Auth::user()->role === Roles::EmployedPrivilegedTutor->value
+            || Auth::user()->role === Roles::EmployedTutor->value
+            || Auth::user()->role === Roles::Tutor->value);
+    }    
 
     public static function form(Form $form): Form
     {
@@ -40,7 +42,7 @@ class CreneauResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
     
         return $table
             ->query(
@@ -90,23 +92,23 @@ class CreneauResource extends Resource
                         ->color('gray')
                         ->placeholder('—'),
     
-                        TextColumn::make('id')
-                            ->label('UVs proposées')
-                            ->formatStateUsing(function ($state, Creneaux $creneau) {
-                                $uvs = collect();
-                        
-                                if ($creneau->tutor1 && $creneau->tutor1->proposedUvs) {
-                                    $uvs = $uvs->merge($creneau->tutor1->proposedUvs->pluck('code'));
-                                }
-                        
-                                if ($creneau->tutor2 && $creneau->tutor2->proposedUvs) {
-                                    $uvs = $uvs->merge($creneau->tutor2->proposedUvs->pluck('code'));
-                                }
-                        
-                                return $uvs->unique()->sort()->implode(', ') ?: '—';
-                            })
-                            ->icon('heroicon-o-academic-cap')
-                            ->color('primary'),                   
+                    TextColumn::make('id')
+                        ->label('UVs proposées')
+                        ->formatStateUsing(function ($state, Creneaux $creneau) {
+                            $uvs = collect();
+                    
+                            if ($creneau->tutor1 && $creneau->tutor1->proposedUvs) {
+                                $uvs = $uvs->merge($creneau->tutor1->proposedUvs->pluck('code'));
+                            }
+                    
+                            if ($creneau->tutor2 && $creneau->tutor2->proposedUvs) {
+                                $uvs = $uvs->merge($creneau->tutor2->proposedUvs->pluck('code'));
+                            }
+                    
+                            return $uvs->unique()->sort()->implode(', ') ?: '—';
+                        })
+                        ->icon('heroicon-o-academic-cap')
+                        ->color('primary'),                   
                 ])
             ])
             ->contentGrid([
@@ -150,6 +152,7 @@ class CreneauResource extends Resource
                         }
                     }),
             ])
+            ->paginated(false)
             ->recordUrl(null);
     }          
 

@@ -5,14 +5,19 @@ namespace App\Enums;
 enum Roles : string
 {
     case Administrator = 'admin';
-    case EmployedTutor = 'employedTutor';
     case EmployedPrivilegedTutor = 'employedPrivilegedTutor';
+    case EmployedTutor = 'employedTutor';
     case Tutor = 'tutor';
     case Tutee = 'tutee';
 
     public function isAdministrator(): bool
     {
         return $this === self::Administrator;
+    }
+
+    public function isEmployedPrivilegedTutor(): bool
+    {
+        return $this === self::EmployedPrivilegedTutor;
     }
 
     public function isEmployedTutor(): bool
@@ -28,10 +33,5 @@ enum Roles : string
     public function isTutee(): bool
     {
         return $this === self::Tutee;
-    }
-
-    public function isEmployedPrivilegedTutor(): bool
-    {
-        return $this === self::EmployedPrivilegedTutor;
     }
 }

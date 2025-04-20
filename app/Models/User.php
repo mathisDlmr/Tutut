@@ -22,5 +22,5 @@ class User extends Authenticatable implements HasName
     public function proposedUvs()
     {
         return $this->belongsToMany(UV::class, 'tutor_propose', 'fk_user', 'fk_code');
-    }    
+    }     
 }

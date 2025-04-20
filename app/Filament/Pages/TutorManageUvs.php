@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
+use App\Enums\Roles;
 
 class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
@@ -22,6 +23,15 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     public $selected_code;
     public $code;
     public $intitule;
+
+    public static function canAccess(): bool
+    {
+        return in_array(auth()->user()?->role, [
+            Roles::Tutor,
+            Roles::EmployedTutor,
+            Roles::EmployedPrivilegedTutor,
+        ]);
+    }    
 
     public function mount(): void
     {

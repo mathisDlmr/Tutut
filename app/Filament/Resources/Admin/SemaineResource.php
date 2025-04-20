@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Admin;
 
+use App\Enums\Roles;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms;
 use Filament\Tables;
 use Filament\Resources\Resource;
@@ -16,14 +18,19 @@ use Filament\Forms\Components\DatePicker;
 use Carbon\Carbon;
 use Filament\Tables\Actions\Action;
 use App\Filament\Resources\Admin\SemaineResource\Pages;
-use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 
 class SemaineResource extends Resource
 {
     protected static ?string $model = Semaine::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user && (Auth::user()->role === Roles::Administrator->value ||
+               Auth::user()->role === Roles::EmployedPrivilegedTutor->value);
+    }       
 
     public static function form(Form $form): Form
     {
@@ -150,7 +157,6 @@ class SemaineResource extends Resource
             return;
         }
     
-        // 🔁 Supprime les anciens créneaux
         Creneaux::where('fk_semaine', $semaine->id)->delete();
     
         $horairesStandards = [

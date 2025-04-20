@@ -2,15 +2,21 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\TutorManageUvs;
+use App\Filament\Resources\Admin\SalleResource;
+use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
+use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
+use App\Filament\Resources\Admin\TuteursEmployesResource as AdminTuteursEmployesResource;
+use App\Filament\Resources\Tutee\InscriptionCreneauResource as TuteeInscriptionCreneauResource;
+use App\Filament\Resources\Tutor\CreneauResource as TutorCreneauResource;
+use App\Filament\Resources\Tutor\FeedbackResource as TutorFeedbackResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -18,7 +24,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
-use BezhanSalleh\FilamentLanguageSwitch\Enums\Placement;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -42,15 +47,18 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Pages\Dashboard::class,
+            ->resources([
+                AdminTuteursEmployesResource::class,
+                AdminSemestreResource::class,
+                AdminSemaineResource::class,
+                SalleResource::class,
+                TutorCreneauResource::class,
+                TutorFeedbackResource::class,
+                TuteeInscriptionCreneauResource::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            /*->widgets([
-                Widgets\AccountWidget::class,
-            ])*/
+            ->pages([
+                TutorManageUvs::class,
+            ])            
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

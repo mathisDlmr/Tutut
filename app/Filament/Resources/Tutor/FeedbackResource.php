@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Tutor;
 
-use App\Filament\Resources\Admin\FeedbackResource\Pages;
+use App\Filament\Resources\Tutor\FeedbackResource\Pages;
 use App\Models\Feedback;
 use App\Enums\Roles;
 use Filament\Forms;
@@ -17,14 +17,10 @@ class FeedbackResource extends Resource
     protected static ?string $model = Feedback::class;
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
 
-    public static function canAccess(): bool
-    {
-        return Auth::check();
-    }
-
     public static function getLabel(): string
     {
-        return Auth::user()->role === Roles::Tutee->value ? 'Mes Feedbacks' : 'Feedbacks';
+        $user = Auth::user();
+        return ($user && Auth::user()->role === Roles::Tutee->value) ? 'Mes Feedbacks' : 'Feedbacks';
     }
 
     public static function form(Form $form): Form

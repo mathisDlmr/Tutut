@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Tutor\CreneauResource\Pages;
 
+use App\Filament\Resources\Tutor\CreneauResource;
 use App\Models\Creneaux;
 use Filament\Resources\Pages\Page;
 use Filament\Actions\Action;
@@ -12,7 +13,7 @@ use Filament\Support\Colors\Color;
 
 class ShotgunCreneaux extends Page
 {
-    protected static string $resource = \App\Filament\Resources\CreneauResource::class;
+    protected static string $resource = CreneauResource::class;
     protected static string $view = 'filament.resources.creneau-resource.pages.shotgun-creneaux';
 
     public $groupedCreneaux = [];

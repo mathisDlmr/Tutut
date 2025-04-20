@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Admin\SemestreResource\Pages;
 
-use App\Filament\Resources\SemestreResource;
+use App\Filament\Resources\Admin\SemestreResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 

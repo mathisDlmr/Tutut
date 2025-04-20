@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Admin\SalleResource\Pages;
 
-use App\Filament\Resources\SalleResource;
+use App\Filament\Resources\Admin\SalleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

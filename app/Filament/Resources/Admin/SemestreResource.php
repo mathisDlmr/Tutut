@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Admin;
 
+use App\Enums\Roles;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Semestre;
 use Filament\Forms;
 use Filament\Tables;
@@ -11,15 +13,20 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Forms\Components\DatePicker;
 use App\Filament\Resources\Admin\SemestreResource\Pages;
 
 class SemestreResource extends Resource
 {
     protected static ?string $model = Semestre::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user && (Auth::user()->role === Roles::Administrator->value ||
+               Auth::user()->role === Roles::EmployedPrivilegedTutor->value);
+    }     
 
     public static function form(Form $form): Form
     {

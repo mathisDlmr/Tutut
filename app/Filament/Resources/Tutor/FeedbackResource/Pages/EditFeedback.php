@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Admin\FeedbackResource\Pages;
+namespace App\Filament\Resources\Tutor\FeedbackResource\Pages;
 
-use App\Filament\Resources\FeedbackResource;
+use App\Filament\Resources\Tutor\FeedbackResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Auth;

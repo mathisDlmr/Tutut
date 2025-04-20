@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Admin\SemaineResource\Pages;
 
-use App\Filament\Resources\SemaineResource;
+use App\Filament\Resources\Admin\SemaineResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

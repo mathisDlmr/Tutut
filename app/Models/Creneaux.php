@@ -30,6 +30,16 @@ class Creneaux extends Model
 
     public function semaine()
     {
-        return $this->belongsTo(\App\Models\Semaine::class, 'fk_semaine');
+        return $this->belongsTo(Semaine::class, 'fk_semaine');
+    }   
+    
+    public function inscriptions()
+    {
+        return $this->hasMany(Inscription::class, 'creneau_id');
+    }    
+
+    public function inscriptionsCount()
+    {
+        return $this->inscriptions()->count();
     }    
 }

@@ -1,0 +1,202 @@
+<?php
+
+namespace App\Filament\Resources\Tutee;
+
+use App\Filament\Resources\Tutee\InscriptionCreneauResource\Pages;
+use App\Models\Creneaux;
+use App\Models\Inscription;
+use Filament\Resources\Resource;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Tables;
+use Illuminate\Support\Collection;
+use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\Layout\Split;
+
+class InscriptionCreneauResource extends Resource
+{
+    protected static ?string $model = Creneaux::class;
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationLabel = 'Créneaux disponibles';
+    protected static ?string $pluralModelLabel = 'Créneaux disponibles';
+
+    public static function form(Form $form): Form
+    {
+        return $form;
+    }
+
+    public static function formatGroupedUvs(Collection $codes): string
+    {
+        return $codes
+            ->sort()
+            ->groupBy(fn($code) => substr($code, 0, 2))
+            ->map(function ($group, $prefix) {
+                $suffixes = $group->map(fn($code) => substr($code, 2))->sort()->join('/');
+                return $prefix . $suffixes;
+            })
+            ->values()
+            ->join("\n");
+    }    
+
+    public static function table(Table $table): Table
+    {
+        $userId = auth()->id();
+
+        return $table
+            ->query(
+                Creneaux::query()
+                    ->with([
+                        'tutor1.proposedUvs', 
+                        'tutor2.proposedUvs',
+                        'inscriptions'
+                    ])   
+                    ->withCount('inscriptions')
+                    ->where('open', true)
+                    ->where(function ($query) {
+                        $query->whereNotNull('tutor1_id')
+                              ->orWhereNotNull('tutor2_id');
+                    })                    
+                    ->orderBy('start')
+            )
+            ->groups([
+                Tables\Grouping\Group::make('day')
+                    ->label('Jour')
+                    ->getTitleFromRecordUsing(fn(Creneaux $record) =>
+                        ucfirst($record->start->translatedFormat('l d F Y'))
+                    )
+                    ->collapsible(false),
+            ])
+            ->defaultGroup('day')
+            ->columns([
+                Stack::make([
+                    Split::make([
+                        TextColumn::make('start')
+                            ->label('Horaire')
+                            ->icon('heroicon-o-clock')
+                            ->color('gray')
+                            ->formatStateUsing(fn($state, $record) =>
+                                $record->start->format('H:i') . ' - ' . $record->end->format('H:i')
+                            ),
+
+                        TextColumn::make('fk_salle')
+                            ->label('Salle')
+                            ->icon('heroicon-o-map-pin')
+                            ->color('gray'),
+                    ]),
+
+                    TextColumn::make('tutor1.firstName')
+                        ->label('Tuteur 1')
+                        ->icon('heroicon-o-user')
+                        ->color('gray')
+                        ->placeholder('—'),
+
+                    TextColumn::make('tutor2.firstName')
+                        ->label('Tuteur 2')
+                        ->icon('heroicon-o-user')
+                        ->color('gray')
+                        ->placeholder('—'),
+
+                    TextColumn::make('id')
+                        ->label('UVs proposées')
+                        ->formatStateUsing(function ($state, Creneaux $creneau) {
+                            $uvs = collect();
+                    
+                            foreach ([$creneau->tutor1, $creneau->tutor2] as $tutor) {
+                                if ($tutor) {
+                                    $tutor->loadMissing('proposedUvs');
+                                    $uvs = $uvs->merge($tutor->proposedUvs->pluck('code'));
+                                }
+                            }
+                    
+                            $grouped = self::formatGroupedUvs($uvs->unique());
+                    
+                            $lines = explode("\n", $grouped);
+                            $chunks = array_chunk($lines, ceil(count($lines) / 3));
+                    
+                            return '<div style="display: flex; gap: 1rem;">' .
+                                collect($chunks)->map(fn($col) =>
+                                    '<div style="flex:1;">' . implode('<br>', $col) . '</div>'
+                                )->implode('') .
+                            '</div>';
+                        })
+                        ->icon('heroicon-o-academic-cap')
+                        ->color('primary')
+                        ->html(),                                              
+
+                    TextColumn::make('places')
+                        ->label('Places')
+                        ->icon('heroicon-o-user-group')
+                        ->color('gray')
+                        ->getStateUsing(function (Creneaux $record) {
+                            $max = ($record->tutor2_id && $record->tutor1_id) ? 15 : 6;
+                            return "{$record->inscriptions_count} / $max";
+                        }),
+                ])
+            ])
+            ->actions([
+                Action::make('s_inscrire')
+                    ->label('S’inscrire')
+                    ->icon('heroicon-o-plus')
+                    ->button()
+                    ->form(fn(Creneaux $record) => [
+                        Forms\Components\Select::make('enseignements_souhaites')
+                            ->label('UVs souhaitées')
+                            ->multiple()
+                            ->required()
+                            ->options(
+                                collect([$record->tutor1, $record->tutor2])
+                                    ->filter()
+                                    ->flatMap(fn($tutor) =>
+                                        $tutor->proposedUvs->mapWithKeys(fn($uv) => [
+                                            $uv->code => "{$uv->code} - {$uv->intitule}"
+                                        ])
+                                    )
+                                    ->unique()
+                            )
+                            ->placeholder('Choisissez vos UVs')
+                            ->maxItems(3),
+                    ])                    
+                    ->visible(function (Creneaux $record) use ($userId) {
+                        $max = $record->tutor2_id ? 15 : 6;
+                        return !$record->inscriptions->contains('tutee_id', $userId)
+                            && $record->inscriptions_count < $max;
+                    })
+                    ->action(function (array $data, Creneaux $record) use ($userId) {
+                        Inscription::create([
+                            'tutee_id' => $userId,
+                            'creneau_id' => $record->id,
+                            'enseignements_souhaites' => json_encode($data['enseignements_souhaites']),
+                        ]);
+                    }),
+                Action::make('se_desinscrire')
+                    ->label('Se désinscrire')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->button()
+                    ->visible(function (Creneaux $record) use ($userId) {
+                        return $record->inscriptions->contains('tutee_id', $userId);
+                    })
+                    ->action(function (Creneaux $record) use ($userId) {
+                        $record->inscriptions()->where('tutee_id', $userId)->delete();
+                    }),
+                
+            ])
+            ->contentGrid([
+                'sm' => 2,
+                'md' => 3,
+            ])
+            ->paginated(false)
+            ->recordUrl(null);
+    }          
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListInscriptionCreneaus::route('/'),
+        ];
+    }
+}
+
