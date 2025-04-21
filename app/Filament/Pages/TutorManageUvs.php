@@ -26,11 +26,10 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
 
     public static function canAccess(): bool
     {
-        return in_array(auth()->user()?->role, [
-            Roles::Tutor,
-            Roles::EmployedTutor,
-            Roles::EmployedPrivilegedTutor,
-        ]);
+        $user = Auth::user();
+        return $user && (Auth::user()->role === Roles::EmployedPrivilegedTutor->value
+            || Auth::user()->role === Roles::EmployedTutor->value
+            || Auth::user()->role === Roles::Tutor->value);
     }    
 
     public function mount(): void
