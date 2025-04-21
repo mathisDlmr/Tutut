@@ -28,6 +28,11 @@ class Creneaux extends Model
         return $this->belongsTo(User::class, 'tutor2_id');
     }
 
+    public function salle()
+    {
+        return $this->belongsTo(Salle::class, 'fk_salle', 'numero');
+    }    
+
     public function semaine()
     {
         return $this->belongsTo(Semaine::class, 'fk_semaine');

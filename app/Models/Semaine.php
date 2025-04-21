@@ -15,6 +15,11 @@ class Semaine extends Model
     public $incrementing = false;
     protected $keyType = 'integer';
 
+    protected $casts = [
+        'date_debut' => 'datetime',
+        'date_fin' => 'datetime',
+    ];    
+
     protected $fillable = ['numero', 'fk_semestre', 'date_debut', 'date_fin', 'is_vacances']; 
 
     public function semestre()

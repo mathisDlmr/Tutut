@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\SendEmail;
 use App\Filament\Pages\TutorManageUvs;
-use App\Filament\Resources\Admin\EmailResource;
 use App\Filament\Resources\Admin\SalleResource;
 use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
 use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
@@ -26,6 +25,10 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
+use Filament\Pages\Dashboard;
+use App\Filament\Widgets\AdminWidget;
+use App\Filament\Widgets\TuteeCreneauxWidget;
+use App\Filament\Widgets\TutorCreneauxTableWidget;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -59,9 +62,15 @@ class AdminPanelProvider extends PanelProvider
                 TuteeInscriptionCreneauResource::class,
             ])
             ->pages([
+                Dashboard::class,
                 SendEmail::class,
                 TutorManageUvs::class,
-            ])            
+            ])   
+            ->widgets([
+                TutorCreneauxTableWidget::class,
+                TuteeCreneauxWidget::class,
+                AdminWidget::class,
+            ])         
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
