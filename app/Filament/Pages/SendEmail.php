@@ -6,6 +6,7 @@ use App\Enums\Roles;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\{Grid, RichEditor, Select, TextInput};
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
@@ -18,12 +19,20 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     protected static ?string $navigationIcon = 'heroicon-o-paper-airplane';
     protected static string $view = 'filament.pages.send-email';
     protected static ?string $navigationLabel = 'Envoyer un mail';
+    protected static ?string $navigationGroup = 'Gestion';
 
     public $template;
     public $templateName;
     public $mailTitle;
     public $content;
     public $roles = [];
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user && (Auth::user()->role === Roles::EmployedPrivilegedTutor->value
+            || Auth::user()->role === Roles::Administrator->value);
+    }   
 
     protected function getFormSchema(): array
     {

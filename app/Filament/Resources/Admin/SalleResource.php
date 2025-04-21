@@ -22,6 +22,7 @@ class SalleResource extends Resource
 {
     protected static ?string $model = Salle::class;
     protected static ?string $navigationIcon = 'heroicon-o-table-cells';
+    protected static ?string $navigationGroup = 'Gestion';
 
     public static function canAccess(): bool
     {

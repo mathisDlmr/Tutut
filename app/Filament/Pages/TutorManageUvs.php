@@ -19,6 +19,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static string $view = 'filament.pages.tutor-manage-uvs';
     protected static ?string $title = 'Mes UVs proposées';
+    protected static ?string $navigationGroup = 'Tutorat';
 
     public $selected_code;
     public $code;

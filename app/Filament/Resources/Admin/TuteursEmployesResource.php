@@ -18,6 +18,7 @@ class TuteursEmployesResource extends Resource
 {
     protected static ?string $model = User::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = 'Administration';
 
     public static function canAccess(): bool
     {

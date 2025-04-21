@@ -20,6 +20,7 @@ class SemestreResource extends Resource
 {
     protected static ?string $model = Semestre::class;
     protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
+    protected static ?string $navigationGroup = 'Gestion';
 
     public static function canAccess(): bool
     {
