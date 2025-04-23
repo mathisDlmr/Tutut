@@ -41,7 +41,6 @@ class FeedbackResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('text')
                     ->label('')
-                    ->searchable(),
             ])
             ->filters([
                 //
