@@ -26,4 +26,14 @@ class Semaine extends Model
     {
         return $this->belongsTo(Semestre::class, 'fk_semestre', 'code');
     }
+
+    public function heuresSupplementaires()
+    {
+        return $this->hasMany(HeuresSupplementaires::class);
+    }    
+
+    public function comptabilites()
+    {
+        return $this->hasMany(Comptabilite::class, 'fk_user');
+    }    
 }

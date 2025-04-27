@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tutor1_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->foreignId('tutor2_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->boolean('tutor1_compted')->nullable(); // null = non traité, true/false sinon
+            $table->boolean('tutor2_compted')->nullable();
             $table->foreignId('fk_semaine')->constrained('semaines', 'id')->onDelete('cascade');
             $table->foreignId('fk_salle')->constrained('salles', 'numero');
             $table->boolean('open')->default(false);

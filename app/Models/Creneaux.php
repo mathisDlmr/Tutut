@@ -11,7 +11,7 @@ class Creneaux extends Model
 
     protected $table = 'creneaux';
 
-    protected $fillable = ['tutor1_id','tutor2_id','fk_semaine','fk_salle','open','start','end'];
+    protected $fillable = ['tutor1_id','tutor2_id','tutor1_compted','tutor2_compted','fk_semaine','fk_salle','open','start','end'];
 
     protected $casts = [
         'start' => 'datetime',

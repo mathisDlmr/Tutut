@@ -9,6 +9,7 @@ use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
 use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
 use App\Filament\Resources\Admin\TuteursEmployesResource as AdminTuteursEmployesResource;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource as TuteeInscriptionCreneauResource;
+use App\Filament\Resources\Tutor\ComptabiliteResource;
 use App\Filament\Resources\Tutor\CreneauResource as TutorCreneauResource;
 use App\Filament\Resources\Tutor\FeedbackResource as TutorFeedbackResource;
 use Filament\Http\Middleware\Authenticate;
@@ -58,6 +59,7 @@ class AdminPanelProvider extends PanelProvider
                 AdminSemaineResource::class,
                 SalleResource::class,
                 TutorCreneauResource::class,
+                ComptabiliteResource::class,
                 TutorFeedbackResource::class,
                 TuteeInscriptionCreneauResource::class,
             ])

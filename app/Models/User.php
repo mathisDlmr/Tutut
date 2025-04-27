@@ -23,4 +23,9 @@ class User extends Authenticatable implements HasName
     {
         return $this->belongsToMany(UV::class, 'tutor_propose', 'fk_user', 'fk_code');
     }     
+
+    public function heuresSupplementaires()
+    {
+        return $this->hasMany(HeuresSupplementaires::class);
+    }    
 }

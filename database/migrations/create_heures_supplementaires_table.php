@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('comptabilite', function (Blueprint $table) {
+        Schema::create('heures_supplementaires', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('semaine_id')->constrained('semaines')->onDelete('cascade');
             $table->float('nb_heures');
-            $table->string('commentaire_bve', 255)->nullable();
-            $table->foreignId('fk_user')->constrained('users', 'id');
-            $table->foreignId('fk_semaine')->constrained('semaines', 'id');
+            $table->text('commentaire');
             $table->timestamps();
-        });
+        });        
     }
 
     /**
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('comptabilite');
+        Schema::dropIfExists('heures_supplementaires');
     }
 };
