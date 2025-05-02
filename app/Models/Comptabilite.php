@@ -14,6 +14,7 @@ class Comptabilite extends Model
     protected $fillable = [
         'nb_heures',
         'commentaire_bve',
+        'saisie',
         'fk_user',
         'fk_semaine',
     ];

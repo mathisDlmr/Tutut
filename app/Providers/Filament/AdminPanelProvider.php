@@ -2,14 +2,16 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\BilanMensuelComptabilite;
 use App\Filament\Pages\SendEmail;
 use App\Filament\Pages\TutorManageUvs;
+use App\Filament\Resources\Admin\ComptabiliteResource;
 use App\Filament\Resources\Admin\SalleResource;
 use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
 use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
 use App\Filament\Resources\Admin\TuteursEmployesResource as AdminTuteursEmployesResource;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource as TuteeInscriptionCreneauResource;
-use App\Filament\Resources\Tutor\ComptabiliteResource;
+use App\Filament\Resources\Tutor\ComptabiliteTutorResource;
 use App\Filament\Resources\Tutor\CreneauResource as TutorCreneauResource;
 use App\Filament\Resources\Tutor\FeedbackResource as TutorFeedbackResource;
 use Filament\Http\Middleware\Authenticate;
@@ -57,9 +59,10 @@ class AdminPanelProvider extends PanelProvider
                 AdminTuteursEmployesResource::class,
                 AdminSemestreResource::class,
                 AdminSemaineResource::class,
+                ComptabiliteResource::class,
                 SalleResource::class,
                 TutorCreneauResource::class,
-                ComptabiliteResource::class,
+                ComptabiliteTutorResource::class,
                 TutorFeedbackResource::class,
                 TuteeInscriptionCreneauResource::class,
             ])

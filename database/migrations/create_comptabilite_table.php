@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->float('nb_heures');
             $table->string('commentaire_bve', 255)->nullable();
+            $table->boolean('saisie')->default(false);
             $table->foreignId('fk_user')->constrained('users', 'id');
             $table->foreignId('fk_semaine')->constrained('semaines', 'id');
             $table->timestamps();

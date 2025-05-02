@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Tutor;
 
-use App\Filament\Resources\Tutor\ComptabiliteResource\Pages;
+use App\Filament\Resources\Tutor\ComptabiliteTutorResource\Pages;
 use App\Models\Comptabilite;
 use App\Models\Creneaux;
 use App\Enums\Roles;
@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Filament\Resources\Resource;
 
-class ComptabiliteResource extends Resource
+class ComptabiliteTutorResource extends Resource
 {
     protected static ?string $model = Comptabilite::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
@@ -148,8 +148,8 @@ class ComptabiliteResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListComptabilites::route('/'),
-            'create' => Pages\CreateComptabilite::route('/create'),
+            'index' => Pages\ListTutorComptabilites::route('/'),
+            'create' => Pages\CreateTutorComptabilite::route('/create'),
         ];
     }
 }

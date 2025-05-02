@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Tutor\ComptabiliteResource\Pages;
+namespace App\Filament\Resources\Admin\ComptabiliteResource\Pages;
 
-use App\Filament\Resources\Tutor\ComptabiliteResource;
+use App\Filament\Resources\Admin\ComptabiliteResource;
 use Filament\Resources\Pages\EditRecord;
 
 class EditComptabilite extends EditRecord

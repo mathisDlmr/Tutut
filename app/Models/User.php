@@ -28,4 +28,9 @@ class User extends Authenticatable implements HasName
     {
         return $this->hasMany(HeuresSupplementaires::class);
     }    
+
+    public function comptabilites()
+    {
+        return $this->hasMany(Comptabilite::class, 'fk_user');
+    }
 }

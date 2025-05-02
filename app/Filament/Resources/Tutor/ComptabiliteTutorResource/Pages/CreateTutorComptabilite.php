@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\Tutor\ComptabiliteResource\Pages;
+namespace App\Filament\Resources\Tutor\ComptabiliteTutorResource\Pages;
 
-use App\Filament\Resources\Tutor\ComptabiliteResource;
+use App\Filament\Resources\Tutor\ComptabiliteTutorResource;
 use App\Models\Creneaux;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
 
-class CreateComptabilite extends CreateRecord
+class CreateTutorComptabilite extends CreateRecord
 {
-    protected static string $resource = ComptabiliteResource::class;
+    protected static string $resource = ComptabiliteTutorResource::class;
 
 
     protected function getFormActions(): array
@@ -101,6 +101,6 @@ class CreateComptabilite extends CreateRecord
             ->success()
             ->send();
     
-        $this->redirect(ComptabiliteResource::getUrl('index'));
+        $this->redirect(ComptabiliteTutorResource::getUrl('index'));
     }                   
 }

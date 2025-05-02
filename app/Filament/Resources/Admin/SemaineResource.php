@@ -112,10 +112,10 @@ class SemaineResource extends Resource
                 Tables\Columns\TextColumn::make('semestre.code')->label('Semestre'),
                 Tables\Columns\TextColumn::make('date_debut')
                     ->label('Date de début')
-                    ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('l d F Y')),
+                    ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('d F Y')),
                 Tables\Columns\TextColumn::make('date_fin')
                     ->label('Date de fin')
-                    ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('l d F Y')),
+                    ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('d F Y')),
                 Tables\Columns\TextColumn::make('is_vacances')
                     ->label('Vacances')
                     ->formatStateUsing(fn (bool $state) => $state ? 'Oui' : 'Non'),
@@ -134,6 +134,7 @@ class SemaineResource extends Resource
                     ->icon('heroicon-o-lock-open')
                     ->requiresConfirmation()
                     ->action(function (Semaine $record) {
+                        Creneaux::all()->update(['open' => false]);
                         Creneaux::where('fk_semaine', $record->id)->update(['open' => true]);
                         Notification::make()
                             ->title("Tous les créneaux de la semaine {$record->numero} sont maintenant ouverts.")
