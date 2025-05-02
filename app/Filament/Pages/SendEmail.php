@@ -23,9 +23,15 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
 
     public $template;
     public $templateName;
+    public $templateOptions = [];
     public $mailTitle;
     public $content;
     public $roles = [];
+
+    public function mount()
+    {
+        $this->templateOptions = $this->getTemplateOptions();
+    }    
 
     public static function canAccess(): bool
     {
@@ -40,7 +46,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
             Grid::make(2)->schema([
                 Select::make('template')
                     ->label('Charger un template')
-                    ->options($this->getTemplateOptions())
+                    ->options(fn () => $this->templateOptions)
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set) {
                         if ($state && Storage::exists("email-templates/{$state}.json")) {
@@ -48,7 +54,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
                             $set('mailTitle', $data['title'] ?? '');
                             $set('content', $data['content'] ?? '');
                         }
-                    }),
+                }),            
             ]),
     
             Select::make('roles')
@@ -130,6 +136,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
             ->send();
 
         $this->templateName = null;
+        $this->templateOptions = $this->getTemplateOptions();
     }
 
     public function deleteTemplate()
