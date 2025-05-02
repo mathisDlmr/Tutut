@@ -132,6 +132,7 @@ class ComptabiliteTutorResource extends Resource
                 Tables\Columns\TextColumn::make('commentaire_bve')
                     ->limit(50),
             ])
+            ->modifyQueryUsing(fn ($query) => $query->where('fk_user', Auth::id()))
             ->filters([])
             ->paginated(false)
             ->recordUrl(null)
