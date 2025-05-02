@@ -43,24 +43,23 @@
         {{ $uvs ?: '—' }}
     </div>
     <div class="flex gap-2" x-data="{ counted: @js($isCounted) }">
-    <button
-        type="button"
-        @click="counted = true; $wire.call('toggleCreneauCompted', {{ $creneau->id }}, true)"
-        class="px-2 py-1 rounded text-white font-semibold"
-        :class="counted ? 'bg-success' : 'bg-primary'"
-    >
-        Compter
-    </button>
+        <button
+            type="button"
+            @click="$wire.call('toggleCreneauCompted', {{ $creneau->id }}, true).then(() => counted = true)"
+            class="px-2 py-1 rounded text-white font-semibold"
+            :class="counted ? 'bg-success' : 'bg-primary'"
+        >
+            Présent.e
+        </button>
 
-    <button
-        type="button"
-        @click="counted = false; $wire.call('toggleCreneauCompted', {{ $creneau->id }}, false)"
-        class="px-2 py-1 rounded text-white font-semibold"
-        :class="counted === false ? 'bg-danger' : 'bg-primary'"
-    >
-        Décompter
-    </button>
-</div>
-
+        <button
+            type="button"
+            @click="$wire.call('toggleCreneauCompted', {{ $creneau->id }}, false).then(() => counted = false)"
+            class="px-2 py-1 rounded text-white font-semibold"
+            :class="counted === false ? 'bg-danger' : 'bg-primary'"
+        >
+            Absent.e
+        </button>
+    </div>
 </div>
 
