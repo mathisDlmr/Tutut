@@ -60,7 +60,19 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
             Select::make('roles')
                 ->label('Destinataires')
                 ->multiple()
-                ->options($this->getRolesOptions()),
+                ->options(collect(Roles::cases())
+                    ->mapWithKeys(fn ($role) => [
+                        $role->value => match ($role) {
+                            Roles::Administrator => 'Administrateur',
+                            Roles::EmployedPrivilegedTutor => 'Tuteur privilégié employé',
+                            Roles::EmployedTutor => 'Tuteur employé',
+                            Roles::Tutor => 'Tuteur',
+                            Roles::Tutee => 'Élève',
+                        }
+                    ])
+                    ->toArray()
+                )
+                ->required(),
     
             TextInput::make('mailTitle')
                 ->label('Sujet')
