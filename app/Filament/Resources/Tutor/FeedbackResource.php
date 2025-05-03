@@ -29,7 +29,7 @@ class FeedbackResource extends Resource
             ->schema([
                 Forms\Components\Hidden::make('tutee_id')
                     ->default(Auth::id()),
-                Forms\Components\TextInput::make('text')
+                Forms\Components\Textarea::make('text')
                     ->required()
                     ->label('Donnez-nous votre avis !'),
             ]);
@@ -48,12 +48,22 @@ class FeedbackResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => Auth::id() === $record->tutee_id),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn ($record) => Auth::id() === $record->tutee_id)
+                    ->action(function (Feedback $record) {
+                        $record->delete();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Supprimer le feedback')
+                    ->modalSubheading('Êtes-vous sûr de vouloir supprimer ce feedback ?')
+                    ->modalButton('Supprimer'),
             ])
             ->bulkActions([
                 //
             ])            
             ->modifyQueryUsing(fn ($query) => $query->when(Auth::user()->role === Roles::Tutee->value, fn ($query) => $query->where('tutee_id', Auth::id()))
         )
+        ->paginated(false)
         ->defaultSort('created_at', 'desc')
         ->recordUrl(null);
     }
