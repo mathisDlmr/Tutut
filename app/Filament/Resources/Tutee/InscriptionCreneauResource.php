@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Tutee;
 
+use App\Enums\Roles;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource\Pages;
 use App\Models\Creneaux;
 use App\Models\Inscription;
@@ -15,6 +16,8 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\Split;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class InscriptionCreneauResource extends Resource
 {
@@ -43,7 +46,7 @@ class InscriptionCreneauResource extends Resource
 
     public static function table(Table $table): Table
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
 
         return $table
             ->query(
@@ -87,17 +90,19 @@ class InscriptionCreneauResource extends Resource
                             ->color('gray'),
                     ]),
 
-                    TextColumn::make('tutor1.firstName')
-                        ->label('Tuteur 1')
-                        ->icon('heroicon-o-user')
-                        ->color('gray')
-                        ->placeholder('—'),
+                    Split::make([
+                        TextColumn::make('tutor1.firstName')
+                            ->label('Tuteur 1')
+                            ->icon('heroicon-o-user')
+                            ->color('gray')
+                            ->placeholder('—'),
 
-                    TextColumn::make('tutor2.firstName')
-                        ->label('Tuteur 2')
-                        ->icon('heroicon-o-user')
-                        ->color('gray')
-                        ->placeholder('—'),
+                        TextColumn::make('tutor2.firstName')
+                            ->label('Tuteur 2')
+                            ->icon('heroicon-o-user')
+                            ->color('gray')
+                            ->placeholder('—'),
+                    ]),
 
                     TextColumn::make('id')
                         ->label('UVs proposées')
@@ -114,7 +119,7 @@ class InscriptionCreneauResource extends Resource
                             $grouped = self::formatGroupedUvs($uvs->unique());
                     
                             $lines = explode("\n", $grouped);
-                            $chunks = array_chunk($lines, ceil(count($lines) / 3));
+                            $chunks = array_chunk($lines, ceil(count($lines) / 4));
                     
                             return '<div style="display: flex; gap: 1rem;">' .
                                 collect($chunks)->map(fn($col) =>
@@ -162,7 +167,8 @@ class InscriptionCreneauResource extends Resource
                     ->visible(function (Creneaux $record) use ($userId) {
                         $max = $record->tutor2_id ? 15 : 6;
                         return !$record->inscriptions->contains('tutee_id', $userId)
-                            && $record->inscriptions_count < $max;
+                            && $record->inscriptions_count < $max
+                            && Auth::user()->role !== Roles::Administrator->value;
                     })
                     ->action(function (array $data, Creneaux $record) use ($userId) {
                         Inscription::create([
@@ -182,7 +188,35 @@ class InscriptionCreneauResource extends Resource
                     ->action(function (Creneaux $record) use ($userId) {
                         $record->inscriptions()->where('tutee_id', $userId)->delete();
                     }),
-                
+                Action::make('voir_inscrits')
+                    ->label('Voir les inscrit·e·s')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->modalHeading('Liste des inscrit·e·s')
+                    ->modalButton('Fermer')
+                    ->modalCancelAction(false)
+                    ->visible(fn (Creneaux $record) => $record->inscriptions_count > 0)
+                    ->modalContent(function (Creneaux $record) {
+                        $html = '<ul class="space-y-2">';
+                    
+                        foreach ($record->inscriptions as $inscription) {
+                            $user = $inscription->tutee;
+                            $uvs = collect(json_decode($inscription->enseignements_souhaites ?? '[]'))
+                                ->sort()
+                                ->implode(', ');
+                    
+                            $html .= "<li>
+                                        <strong>• {$user->firstName} {$user->lastName}</strong> : {$uvs}<br>
+                                      </li>";
+                        }
+                    
+                        $html .= '</ul>';
+                    
+                        return new HtmlString($html);
+                    })                    
+                    ->disabled(fn(Creneaux $record) => $record->inscriptions_count === 0)
+                    ->button()
+                    ->outlined()
             ])
             ->contentGrid([
                 'sm' => 2,
