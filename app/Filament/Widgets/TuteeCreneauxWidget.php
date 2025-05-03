@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class TuteeCreneauxWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $heading = 'Mes tutorats';
+    protected static ?string $heading = 'Mes prochaines inscriptions';
 
     public static function canView(): bool
     {
@@ -62,19 +62,19 @@ class TuteeCreneauxWidget extends BaseWidget
                         ->icon('heroicon-o-map-pin')
                         ->color('gray'),
                 ]),
+                Tables\Columns\Layout\Split::make([
+                    TextColumn::make('tutor1.firstName')
+                        ->label('Tuteur 1')
+                        ->icon('heroicon-o-user')
+                        ->color('gray')
+                        ->placeholder('—'),
 
-                TextColumn::make('tutor1.firstName')
-                    ->label('Tuteur 1')
-                    ->icon('heroicon-o-user')
-                    ->color('gray')
-                    ->placeholder('—'),
-
-                TextColumn::make('tutor2.firstName')
-                    ->label('Tuteur 2')
-                    ->icon('heroicon-o-user')
-                    ->color('gray')
-                    ->placeholder('—'),
-
+                    TextColumn::make('tutor2.firstName')
+                        ->label('Tuteur 2')
+                        ->icon('heroicon-o-user')
+                        ->color('gray')
+                        ->placeholder('—'),
+                ]),
                 TextColumn::make('id')
                     ->label('UVs demandées')
                     ->formatStateUsing(function ($state, Creneaux $creneau) {

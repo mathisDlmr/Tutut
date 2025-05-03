@@ -12,6 +12,11 @@ class ListFeedback extends ListRecords
 {
     protected static string $resource = FeedbackResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Donnez-nous votre avis !';
+    }
+
     protected function getHeaderActions(): array
     {
         if(Auth::user()->role === Roles::Tutee->value){

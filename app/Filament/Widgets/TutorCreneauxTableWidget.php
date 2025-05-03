@@ -6,13 +6,14 @@ use App\Models\Creneaux;
 use App\Enums\Roles;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Tables;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Auth;
 
 class TutorCreneauxTableWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $heading = 'Mes créneaux';
+    protected static ?string $heading = 'Mes prochains créneaux';
 
     public static function canView(): bool
     {
@@ -48,7 +49,7 @@ class TutorCreneauxTableWidget extends BaseWidget
                     ->formatStateUsing(fn($state, $record) =>
                         ucfirst($record->start->translatedFormat('l d F Y'))
                     ),
-                Tables\Columns\Layout\Split::make([
+                Split::make([
                     TextColumn::make('start')
                         ->label('Horaire')
                         ->icon('heroicon-o-clock')
@@ -61,19 +62,18 @@ class TutorCreneauxTableWidget extends BaseWidget
                         ->icon('heroicon-o-map-pin')
                         ->color('gray'),
                 ]),
-
-                TextColumn::make('tutor1.firstName')
-                    ->label('Tuteur 1')
-                    ->icon('heroicon-o-user')
-                    ->color('gray')
-                    ->placeholder('—'),
-
-                TextColumn::make('tutor2.firstName')
-                    ->label('Tuteur 2')
-                    ->icon('heroicon-o-user')
-                    ->color('gray')
-                    ->placeholder('—'),
-
+                Split::make([
+                    TextColumn::make('tutor1.firstName')
+                        ->label('Tuteur 1')
+                        ->icon('heroicon-o-user')
+                        ->color('gray')
+                        ->placeholder('—'),
+                    TextColumn::make('tutor2.firstName')
+                        ->label('Tuteur 2')
+                        ->icon('heroicon-o-user')
+                        ->color('gray')
+                        ->placeholder('—'),
+                ]),
                 TextColumn::make('inscriptions_count')
                     ->label('Nombre d’inscrits')
                     ->counts('inscriptions')
