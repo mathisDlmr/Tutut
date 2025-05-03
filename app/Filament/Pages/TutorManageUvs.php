@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Enums\Roles;
+use App\Models\User;
 
 class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
@@ -41,36 +42,41 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Ajouter une UV existante')
-                ->description('Choisissez une UV parmi celles déjà existantes')
-                ->schema([
-                    Forms\Components\Select::make('selected_code')
-                        ->label('UV existante')
-                        ->options(
-                            \App\Models\UV::whereNotIn('code', Auth::user()->proposedUvs()->pluck('code'))
-                                ->get()
-                                ->mapWithKeys(fn ($uv) => [$uv->code => "{$uv->code} - {$uv->intitule}"])
-                        )
-                        ->searchable()
-                        ->reactive()
-                        ->requiredWithout(['code', 'intitule']),
-                ]),
-    
+            Forms\Components\Section::make('Proposer une UV')
+            ->description('Si vous ne trouvez pas l’UV que vous cherchez, vous pouvez demander à ' . 
+                User::where('role', Roles::EmployedPrivilegedTutor->value)
+                ->get()
+                ->map(fn ($user) => "{$user->firstName} {$user->lastName}")
+                ->join(' ou ')
+            . ' de l\'ajouter')
+            ->schema([
+                Forms\Components\Select::make('selected_code')
+                ->label('UV existante')
+                ->options(
+                    \App\Models\UV::whereNotIn('code', Auth::user()->proposedUvs()->pluck('code'))
+                    ->get()
+                    ->mapWithKeys(fn ($uv) => [$uv->code => "{$uv->code} - {$uv->intitule}"])
+                )
+                ->searchable()
+                ->reactive()
+                ->requiredWithout(['code', 'intitule']),
+            ]),
+        
             Forms\Components\Section::make('OU créer une nouvelle UV')
-                ->description('Créez une nouvelle UV avec son code et son intitulé')
-                ->schema([
-                    Forms\Components\TextInput::make('code')
-                        ->label('Code de l’UV')
-                        ->maxLength(10)
-                        ->requiredWithout('selected_code'),
-    
-                    Forms\Components\TextInput::make('intitule')
-                        ->label('Intitulé de l’UV')
-                        ->maxLength(255)
-                        ->requiredWithout('selected_code'),
-                ])
-                ->columns(2)
-                ->visible(fn (callable $get) => !$get('selected_code')),
+            ->description('Créez une nouvelle UV avec son code et son intitulé')
+            ->schema([
+                Forms\Components\TextInput::make('code')
+                ->label('Code de l’UV')
+                ->maxLength(10)
+                ->requiredWithout('selected_code'),
+        
+                Forms\Components\TextInput::make('intitule')
+                ->label('Intitulé de l’UV')
+                ->maxLength(255)
+                ->requiredWithout('selected_code'),
+            ])
+            ->columns(2)
+            ->visible(fn () => Auth::user()->role === Roles::EmployedPrivilegedTutor->value),
         ])->statePath('');
     }               
 
