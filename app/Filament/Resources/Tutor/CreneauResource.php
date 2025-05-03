@@ -119,14 +119,12 @@ class CreneauResource extends Resource
                 'xl' => 4,
             ])
             ->actions([
-                Action::make('shotgun1')
-                    ->label(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'Se désinscrire (1)' : 'Shotgun 1')
-                    ->color(fn(Creneaux $record) =>
-                        $record->tutor1_id === $userId ? 'success' : 'primary'
-                    )
+                Action::make('toggleShotgun1')
+                    ->label(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'Se désinscrire' : 'Shotgun 1')
+                    ->color(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
-                        $record->tutor2_id !== $userId
+                        ($record->tutor1_id === null && $record->tutor2_id === null) ||$record->tutor1_id === $userId
                     )
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor1_id === $userId) {
@@ -135,15 +133,14 @@ class CreneauResource extends Resource
                             $record->update(['tutor1_id' => $userId]);
                         }
                     }),
-    
-                Action::make('shotgun2')
-                    ->label(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'Se désinscrire (2)' : 'Shotgun 2')
-                    ->color(fn(Creneaux $record) =>
-                        $record->tutor2_id === $userId ? 'success' : 'primary'
-                    )
+            
+                Action::make('toggleShotgun2')
+                    ->label(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'Se désinscrire' : 'Shotgun 2')
+                    ->color(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
-                        $record->tutor1_id !== $userId
+                        ($record->tutor1_id === null && $record->tutor2_id === null) ||
+                        $record->tutor2_id === $userId
                     )
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor2_id === $userId) {
@@ -152,7 +149,7 @@ class CreneauResource extends Resource
                             $record->update(['tutor2_id' => $userId]);
                         }
                     }),
-            ])
+            ])            
             ->paginated(false)
             ->recordUrl(null);
     }          
