@@ -125,12 +125,14 @@ class ComptabiliteTutorResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('semaine.numero')
                     ->label('Semaine'),
-
                 Tables\Columns\TextColumn::make('nb_heures')
                     ->label('Heures comptabilisées'),
-
                 Tables\Columns\TextColumn::make('commentaire_bve')
                     ->limit(50),
+                Tables\Columns\IconColumn::make('saisie')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
             ])
             ->modifyQueryUsing(fn ($query) => $query->where('fk_user', Auth::id()))
             ->filters([])
