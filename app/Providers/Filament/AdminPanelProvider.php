@@ -32,6 +32,7 @@ use Filament\Pages\Dashboard;
 use App\Filament\Widgets\AdminWidget;
 use App\Filament\Widgets\TuteeCreneauxWidget;
 use App\Filament\Widgets\TutorCreneauxTableWidget;
+use App\Models\Semestre;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -52,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('tutut')
             ->path('/tutut')
+            ->brandName("Tut'ut - ".Semestre::where('is_active', true)->first()->code)
             ->colors([
                 'primary' => Color::Blue,
             ])
