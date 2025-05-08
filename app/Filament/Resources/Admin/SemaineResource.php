@@ -16,6 +16,7 @@ use App\Models\DispoSalle;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DatePicker;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Actions\Action;
 use App\Filament\Resources\Admin\SemaineResource\Pages;
 use Filament\Notifications\Notification;
@@ -119,6 +120,12 @@ class SemaineResource extends Resource
                 Tables\Columns\TextColumn::make('is_vacances')
                     ->label('Vacances')
                     ->formatStateUsing(fn (bool $state) => $state ? 'Oui' : 'Non'),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('future')
+                    ->label('Semaines futures')
+                    ->query(fn (Builder $query) => $query->where('date_fin', '>', now()))
+                    ->default(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

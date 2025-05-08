@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class TutorCreneauxTableWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $heading = 'Mes prochains créneaux';
+    protected static ?string $heading = 'Mes prochains créneaux tuteur.ice';
 
     public static function canView(): bool
     {

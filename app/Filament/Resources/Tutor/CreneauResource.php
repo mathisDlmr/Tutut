@@ -11,6 +11,7 @@ use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use App\Enums\Roles;
+use Filament\Forms\Components\Split;
 use Illuminate\Support\Facades\Auth;
 
 class CreneauResource extends Resource
@@ -56,42 +57,39 @@ class CreneauResource extends Resource
                     ->orderBy('start')
             )
             ->groups([
-                Tables\Grouping\Group::make('day')
-                    ->label('Jour')
+                Tables\Grouping\Group::make('day_and_time')
+                    ->label('Jour et horaire')
+                    ->titlePrefixedWithLabel(false)
                     ->getTitleFromRecordUsing(fn(Creneaux $record) =>
-                        ucfirst($record->start->translatedFormat('l d F Y'))
+                        ucfirst($record->start->translatedFormat('l d F Y')) . ' - ' . 
+                        $record->start->format('H:i') . ' à ' . $record->end->format('H:i')
                     )
-                    ->collapsible(false)
-                ])            
-            ->defaultGroup('day')
+                    ->getKeyFromRecordUsing(fn(Creneaux $record) => 
+                        $record->start->format('Y-m-d') . '_' . $record->start->format('H:i')
+                    )
+                    ->collapsible(true),
+            ])
+            ->defaultGroup('day_and_time')
             ->columns([
                 Tables\Columns\Layout\Stack::make([
+                    TextColumn::make('fk_salle')
+                        ->label('Salle')
+                        ->icon('heroicon-o-map-pin')
+                        ->color('gray'),
+    
                     Tables\Columns\Layout\Split::make([
-                        TextColumn::make('start')
-                            ->label('Horaire')
-                            ->icon('heroicon-o-clock')
+                        TextColumn::make('tutor1.firstName')
+                            ->label('Tuteur 1')
+                            ->icon('heroicon-o-user')
                             ->color('gray')
-                            ->formatStateUsing(fn($state, $record) =>
-                                $record->start->format('H:i') . ' - ' . $record->end->format('H:i')
-                            ),                    
-                    
-                        TextColumn::make('fk_salle')
-                            ->label('Salle')
-                            ->icon('heroicon-o-map-pin')
-                            ->color('gray'),
-                    ]),                    
-    
-                    TextColumn::make('tutor1.firstName')
-                        ->label('Tuteur 1')
-                        ->icon('heroicon-o-user')
-                        ->color('gray')
-                        ->placeholder('—'),
-    
-                    TextColumn::make('tutor2.firstName')
-                        ->label('Tuteur 2')
-                        ->icon('heroicon-o-user')
-                        ->color('gray')
-                        ->placeholder('—'),
+                            ->placeholder('—'),
+        
+                        TextColumn::make('tutor2.firstName')
+                            ->label('Tuteur 2')
+                            ->icon('heroicon-o-user')
+                            ->color('gray')
+                            ->placeholder('—'),
+                    ]),
     
                     TextColumn::make('id')
                         ->label('UVs proposées')

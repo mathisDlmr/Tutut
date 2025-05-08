@@ -11,6 +11,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use App\Enums\Roles;
 use App\Models\User;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Notifications\Notification;
 
 class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
@@ -22,6 +24,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     protected static ?string $title = 'Mes UVs proposées';
     protected static ?string $navigationGroup = 'Tutorat';
 
+    public array $languagesForm = [];
     public $selected_code;
     public $code;
     public $intitule;
@@ -34,10 +37,73 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
             || Auth::user()->role === Roles::Tutor->value);
     }    
 
+    public function getLanguagesFormComponentProperty(): Form
+    {
+        return $this->makeForm()
+            ->schema([
+                Forms\Components\CheckboxList::make('languages')
+                    ->label('Langues parlées')
+                    ->options([
+                        'en' => '🇬🇧 Anglais',
+                        'es' => '🇪🇸 Espagnol',
+                        'zh' => '🇨🇳 Chinois',
+                        'de' => '🇩🇪 Allemand',
+                        'ar' => '🇸🇦 Arabe',
+                        'ru' => '🇷🇺 Russe',
+                        'ja' => '🇯🇵 Japonais',
+                        'it' => '🇮🇹 Italien',
+                    ])
+                    ->columns(2)
+            ])
+            ->statePath('languagesForm');
+    }     
+    
     public function mount(): void
     {
-        $this->form->fill();
+        $this->languagesForm = [
+            'languages' => Auth::user()->languages ?? [],
+        ];
+        $this->form->fill([
+            'languages' => $this->languagesForm['languages'],
+        ]);
+    }       
+
+    public function formLanguagesForm(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\CheckboxList::make('languages')
+                    ->label('Langues parlées')
+                    ->options([
+                        'en' => '🇬🇧 Anglais',
+                        'es' => '🇪🇸 Espagnol',
+                        'zh' => '🇨🇳 Chinois',
+                        'de' => '🇩🇪 Allemand',
+                        'ar' => '🇸🇦 Arabe',
+                        'ru' => '🇷🇺 Russe',
+                        'ja' => '🇯🇵 Japonais',
+                        'it' => '🇮🇹 Italien',
+                    ])
+                    ->columns(2)
+                    ->default(Auth::user()->languages ?? [])
+                    ->reactive()
+            ])
+            ->statePath('languagesForm');
     }
+    
+    public function updateLanguages(): void
+    {
+        $data = $this->languagesFormComponent->getState();
+        Auth::user()->update([
+            'languages' => $data['languages'] ?? [],
+        ]);
+    
+        Notification::make()
+            ->title('Langues mises à jour')
+            ->success()
+            ->body('Vos langues ont été mises à jour avec succès.')
+            ->send();
+    }      
 
     public function form(Form $form): Form
     {

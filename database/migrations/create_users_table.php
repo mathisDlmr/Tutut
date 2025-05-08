@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('firstName', 100)->nullable();
             $table->string('lastName', 100)->nullable();
             $table->enum('role', $roles)->default('tutee');
+            $table->json('languages')->nullable();
             $table->timestamps();
         });
     }

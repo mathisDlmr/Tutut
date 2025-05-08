@@ -101,6 +101,7 @@ class TuteursEmployesResource extends Resource
                     ->color('info'),
                 Tables\Actions\DeleteAction::make()
                     ->label('Supprimer les droits')
+                    ->visible(fn (User $record) => $record->role !== Roles::Tutee->value)
                     ->action(fn (User $record) => $record->update(['role' => Roles::Tutee->value])),
                 Tables\Actions\Action::make('upgrade')
                     ->label('Améliorer')

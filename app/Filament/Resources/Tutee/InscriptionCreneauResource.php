@@ -65,43 +65,86 @@ class InscriptionCreneauResource extends Resource
                     ->orderBy('start')
             )
             ->groups([
-                Tables\Grouping\Group::make('day')
-                    ->label('Jour')
+                Tables\Grouping\Group::make('day_and_time')
+                    ->label('Jour et horaire')
+                    ->titlePrefixedWithLabel(false)
                     ->getTitleFromRecordUsing(fn(Creneaux $record) =>
-                        ucfirst($record->start->translatedFormat('l d F Y'))
+                        ucfirst($record->start->translatedFormat('l d F Y')) . ' - ' . 
+                        $record->start->format('H:i') . ' à ' . $record->end->format('H:i')
                     )
-                    ->collapsible(false),
+                    ->getKeyFromRecordUsing(fn(Creneaux $record) => 
+                        $record->start->format('Y-m-d') . '_' . $record->start->format('H:i')
+                    )
+                    ->collapsible(true),
             ])
-            ->defaultGroup('day')
+            ->defaultGroup('day_and_time')
             ->columns([
                 Stack::make([
-                    Split::make([
-                        TextColumn::make('start')
-                            ->label('Horaire')
-                            ->icon('heroicon-o-clock')
-                            ->color('gray')
-                            ->formatStateUsing(fn($state, $record) =>
-                                $record->start->format('H:i') . ' - ' . $record->end->format('H:i')
-                            ),
-
-                        TextColumn::make('fk_salle')
-                            ->label('Salle')
-                            ->icon('heroicon-o-map-pin')
-                            ->color('gray'),
-                    ]),
-
                     Split::make([
                         TextColumn::make('tutor1.firstName')
                             ->label('Tuteur 1')
                             ->icon('heroicon-o-user')
                             ->color('gray')
-                            ->placeholder('—'),
+                            ->placeholder('—')
+                            ->formatStateUsing(function ($state, $record) {
+                                $languages = is_string($record->tutor1->languages) 
+                                    ? json_decode($record->tutor1->languages, true) 
+                                    : ($record->tutor1->languages ?? []);
+                                $flags = collect($languages)->map(function ($lang) {
+                                    return match ($lang) {
+                                        'en' => '🇬🇧',
+                                        'es' => '🇪🇸',
+                                        'zh' => '🇨🇳',
+                                        'de' => '🇩🇪',
+                                        'ar' => '🇸🇦',
+                                        'ru' => '🇷🇺',
+                                        'ja' => '🇯🇵',
+                                        'it' => '🇮🇹',
+                                        default => null,
+                                    };
+                                })->filter()->implode(' ');
+                                return $state . ($flags ? " {$flags}" : '');
+                            }),
 
                         TextColumn::make('tutor2.firstName')
                             ->label('Tuteur 2')
                             ->icon('heroicon-o-user')
                             ->color('gray')
-                            ->placeholder('—'),
+                            ->placeholder('—')
+                            ->formatStateUsing(function ($state, $record) {
+                                $languages = is_string($record->tutor2->languages) 
+                                    ? json_decode($record->tutor2->languages, true) 
+                                    : ($record->tutor2->languages ?? []);
+                                $flags = collect($languages)->map(function ($lang) {
+                                    return match ($lang) {
+                                        'en' => '🇬🇧',
+                                        'es' => '🇪🇸',
+                                        'zh' => '🇨🇳',
+                                        'de' => '🇩🇪',
+                                        'ar' => '🇸🇦',
+                                        'ru' => '🇷🇺',
+                                        'ja' => '🇯🇵',
+                                        'it' => '🇮🇹',
+                                        default => null,
+                                    };
+                                })->filter()->implode(' ');
+                                return $state . ($flags ? " {$flags}" : '');
+                            }),
+                    ]),
+
+                    Split::make([
+                        TextColumn::make('fk_salle')
+                            ->label('Salle')
+                            ->icon('heroicon-o-map-pin')
+                            ->color('gray'),
+                        TextColumn::make('places')
+                            ->label('Places')
+                            ->icon('heroicon-o-user-group')
+                            ->color('gray')
+                            ->getStateUsing(function (Creneaux $record) {
+                                $max = ($record->tutor2_id && $record->tutor1_id) ? 15 : 6;
+                                return "{$record->inscriptions_count} / $max";
+                            }),
                     ]),
 
                     TextColumn::make('id')
@@ -130,20 +173,11 @@ class InscriptionCreneauResource extends Resource
                         ->icon('heroicon-o-academic-cap')
                         ->color('primary')
                         ->html(),                                              
-
-                    TextColumn::make('places')
-                        ->label('Places')
-                        ->icon('heroicon-o-user-group')
-                        ->color('gray')
-                        ->getStateUsing(function (Creneaux $record) {
-                            $max = ($record->tutor2_id && $record->tutor1_id) ? 15 : 6;
-                            return "{$record->inscriptions_count} / $max";
-                        }),
                 ])
             ])
             ->actions([
                 Action::make('s_inscrire')
-                    ->label('S’inscrire')
+                    ->label("S'inscrire")
                     ->icon('heroicon-o-plus')
                     ->button()
                     ->form(fn(Creneaux $record) => [
@@ -233,4 +267,3 @@ class InscriptionCreneauResource extends Resource
         ];
     }
 }
-
