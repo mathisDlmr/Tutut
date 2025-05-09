@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Admin\TuteursEmployesResource\Pages\ComptabiliteResource\Pages;
+namespace App\Filament\Resources\Admin\ComptabiliteResource\Pages;
 
 use App\Filament\Resources\Admin\ComptabiliteResource;
 use Filament\Resources\Pages\CreateRecord;
