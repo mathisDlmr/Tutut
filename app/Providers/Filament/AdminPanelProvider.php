@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\BilanMensuelComptabilite;
 use App\Filament\Pages\SendEmail;
+use App\Filament\Pages\SettingsPage;
 use App\Filament\Pages\TutorManageUvs;
 use App\Filament\Resources\Admin\ComptabiliteResource;
 use App\Filament\Resources\Admin\SalleResource;
@@ -72,6 +73,7 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
                 SendEmail::class,
                 TutorManageUvs::class,
+                SettingsPage::class,
             ])   
             ->widgets([
                 TutorCreneauxTableWidget::class,
