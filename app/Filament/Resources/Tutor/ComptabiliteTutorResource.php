@@ -47,28 +47,46 @@ class ComptabiliteTutorResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(function () {
-                $user = Auth::user();
-                $semestreActif = \App\Models\Semestre::where('is_active', true)->first();
+            ->schema([
+                Forms\Components\Toggle::make('filter_uncounted')
+                    ->label('Afficher uniquement les créneaux non comptés')
+                    ->reactive()
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('refresh_key', now()))
+                    ->columnSpanFull(),
     
-                if (!$semestreActif) return [];
+                Forms\Components\Hidden::make('refresh_key'),
     
-                $semaines = \App\Models\Semaine::where('fk_semestre', $semestreActif->code)
-                    ->orderByDesc('numero')
-                    ->get();
+                Forms\Components\Group::make()->schema(function (Forms\Get $get) {
+                    $user = Auth::user();
+                    $semestreActif = \App\Models\Semestre::where('is_active', true)->first();
     
-                $allCreneaux = \App\Models\Creneaux::with(['salle', 'inscriptions', 'semaine'])
-                    ->where(function ($q) use ($user) {
-                        $q->where('tutor1_id', $user->id)
-                          ->orWhere('tutor2_id', $user->id);
-                    })
-                    ->whereHas('inscriptions')
-                    ->get()
-                    ->groupBy('fk_semaine');
+                    if (!$semestreActif) return [];
     
-                    return $semaines->map(function ($semaine) use ($allCreneaux, $user) {
+                    $filterUncounted = $get('filter_uncounted') ?? false;
+    
+                    $semaines = \App\Models\Semaine::where('fk_semestre', $semestreActif->code)
+                        ->orderByDesc('numero')
+                        ->get();
+    
+                    $allCreneaux = \App\Models\Creneaux::with(['salle', 'inscriptions', 'semaine'])
+                        ->where(function ($q) use ($user) {
+                            $q->where('tutor1_id', $user->id)
+                                ->orWhere('tutor2_id', $user->id);
+                        })
+                        ->whereHas('inscriptions')
+                        ->get()
+                        ->groupBy('fk_semaine');
+    
+                    return $semaines->map(function ($semaine) use ($allCreneaux, $user, $filterUncounted) {
                         $creneaux = $allCreneaux[$semaine->id] ?? collect();
-                    
+    
+                        if ($filterUncounted) {
+                            $creneaux = $creneaux->filter(function ($creneau) use ($user) {
+                                $key = $creneau->tutor1_id === $user->id ? 'tutor1_compted' : 'tutor2_compted';
+                                return $creneau->$key === null; // ✅ strictement null
+                            });
+                        }
+    
                         $heuresSupp = \App\Models\HeuresSupplementaires::where('user_id', $user->id)
                             ->where('semaine_id', $semaine->id)
                             ->get()
@@ -77,7 +95,7 @@ class ComptabiliteTutorResource extends Resource
                                 'commentaire' => $heure->commentaire,
                             ])
                             ->toArray();
-                    
+    
                         return Forms\Components\Group::make([
                             Forms\Components\Section::make("Semaine {$semaine->numero} — du {$semaine->date_debut->format('d/m')} au {$semaine->date_fin->format('d/m')}")
                                 ->schema([
@@ -86,7 +104,7 @@ class ComptabiliteTutorResource extends Resource
                                             $creneaux->map(function ($creneau) use ($user) {
                                                 $tutorKey = $creneau->tutor1_id === $user->id ? 'tutor1_compted' : 'tutor2_compted';
                                                 $isCounted = $creneau->$tutorKey;
-                    
+    
                                                 return Forms\Components\View::make('filament.components.form.slot-creneau')
                                                     ->viewData([
                                                         'creneau' => $creneau,
@@ -95,16 +113,16 @@ class ComptabiliteTutorResource extends Resource
                                                     ->columnSpan(1);
                                             })->toArray()
                                         ),
+    
                                     Forms\Components\Repeater::make("heures_supplementaires_{$semaine->id}")
                                         ->label('Heures supplémentaires')
                                         ->schema([
                                             Forms\Components\TextInput::make('nb_heures')
                                                 ->label('Durée (heures)')
                                                 ->numeric()
-                                                ->minValue(0.25)
-                                                ->step(0.25)
+                                                ->minValue(0.5)
+                                                ->step(0.5)
                                                 ->required(),
-                    
                                             Forms\Components\Textarea::make('commentaire')
                                                 ->label('Commentaire')
                                                 ->required()
@@ -113,11 +131,12 @@ class ComptabiliteTutorResource extends Resource
                                         ->default($heuresSupp)
                                         ->columns(2)
                                         ->columnSpanFull(),
-                                ])                        
+                                ])
                         ])->columnSpanFull();
-                    })->toArray();                    
-            });
-    }      
+                    })->toArray();
+                })->columnSpanFull()
+            ]);
+    }        
 
     public static function table(Table $table): Table
     {
