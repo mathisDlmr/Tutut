@@ -78,8 +78,18 @@ class SemaineResource extends Resource
                         if (!$semestre) {
                             throw new \Exception("Aucun semestre actif.");
                         }
+
+                        $semaines = Semaine::where('fk_semestre', $semestre->code)
+                            ->orderByDesc('numero')
+                            ->get();
             
-                        $dernierNumero = Semaine::where('fk_semestre', $semestre->code)->max('numero') ?? 0;
+                        $dernierNumero = 0;
+                        foreach ($semaines as $semaine) {
+                            if ($semaine->numero !== 'X') {
+                                $dernierNumero = is_numeric($semaine->numero) ? intval($semaine->numero) : 0;
+                                break;
+                            }
+                        }
             
                         $lastWeek = Semaine::where('fk_semestre', $semestre->code)
                             ->orderByDesc('numero')
@@ -152,7 +162,19 @@ class SemaineResource extends Resource
                     ->label('Vacances')
                     ->icon('heroicon-o-sun')
                     ->requiresConfirmation()
-                    ->action(fn (Semaine $record) => $record->update(['is_vacances' => !$record->is_vacances])),
+                    ->action(function (Semaine $record) {
+                        if (!$record->is_vacances) {
+                            $record->update(['is_vacances' => true, 'numero' => 'X']);
+                        } else {
+                            $semestre = Semestre::where('code', $record->fk_semestre)->first();
+                            $previousWeek = Semaine::where('fk_semestre', $semestre->code)
+                                ->where('date_fin', '<', $record->date_debut)
+                                ->orderByDesc('date_fin')
+                                ->first();
+                            $newNumero = $previousWeek ? $previousWeek->numero + 1 : 1;
+                            $record->update(['is_vacances' => false, 'numero' => $newNumero]);
+                        }
+                    })
             ]);
     }
 
