@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Illuminate\Support\Collection;
 
 class ComptabiliteResource extends Resource
@@ -66,6 +67,7 @@ class ComptabiliteResource extends Resource
             ->orderBy('numero')
             ->get();
         
+        // Récupérer tous les tuteurs ayant des comptabilités
         $employedTutorIds = DB::table('comptabilite')
             ->whereIn('fk_semaine', $semaines->pluck('id'))
             ->pluck('fk_user')
@@ -78,30 +80,35 @@ class ComptabiliteResource extends Resource
             ])
             ->orderBy('lastName')
             ->orderBy('firstName');
+
+        // Pour chaque semaine, créer un groupe de mois
+        $months = $semaines->groupBy(function ($semaine) {
+            return Carbon::parse($semaine->date_debut)->format('Y-m');
+        });
+        
+        // Préparer les options pour le filtre par mois
+        $monthOptions = [];
+        foreach ($months as $yearMonth => $semainesInMonth) {
+            $firstSemaine = $semainesInMonth->first();
+            $monthDisplay = ucfirst(Carbon::parse($firstSemaine->date_debut)->format('F Y'));
+            $monthOptions[$yearMonth] = $monthDisplay;
+        }
+        
+        // Créer les groupes pour chaque mois
+        $monthGroups = [];
+        foreach ($months as $yearMonth => $semainesInMonth) {
+            $firstSemaine = $semainesInMonth->first();
+            $monthDisplay = ucfirst(Carbon::parse($firstSemaine->date_debut)->format('F Y'));
+            
+            $monthGroups[] = Tables\Grouping\Group::make($yearMonth)
+                ->label($monthDisplay)
+                ->collapsible(true);
+        }
         
         return $table
             ->query($employedTutors)
-            ->groups([
-                Tables\Grouping\Group::make('month')
-                    ->label('Mois')
-                    ->getTitleFromRecordUsing(function (User $record) use ($semaines) {
-                        $premiereCompta = Comptabilite::where('fk_user', $record->id)
-                            ->whereIn('fk_semaine', $semaines->pluck('id'))
-                            ->join('semaines', 'comptabilite.fk_semaine', '=', 'semaines.id')
-                            ->orderBy('semaines.date_debut')
-                            ->select('semaines.*')
-                            ->first();
-                        
-                        if ($premiereCompta) {
-                            return ucfirst(Carbon::parse($premiereCompta->date_debut)->format('F Y'));
-                        }
-                        
-                        $premiereSemaine = $semaines->first();
-                        return ucfirst(Carbon::parse($premiereSemaine->date_debut)->format('F Y'));
-                    })
-                    ->collapsible(true)
-            ])
-            ->defaultGroup('month')
+            ->groups($monthGroups)
+            ->defaultGroup($months->keys()->first())
             ->filters([
                 Tables\Filters\Filter::make('non_valides')
                     ->label('Non validés')
@@ -112,7 +119,25 @@ class ComptabiliteResource extends Resource
                         });
                     })
                     ->default(),
-            ])            
+                
+                // Ajout d'un filtre par mois
+                Tables\Filters\SelectFilter::make('month')
+                    ->label('Mois')
+                    ->options($monthOptions)
+                    ->query(function ($query, array $data) use ($semaines, $months) {
+                        if (!$data['value']) {
+                            return $query;
+                        }
+                        
+                        $selectedYearMonth = $data['value'];
+                        $semainesInMonth = $months[$selectedYearMonth] ?? collect();
+                        
+                        return $query->whereHas('comptabilites', function ($q) use ($semainesInMonth) {
+                            $q->whereIn('fk_semaine', $semainesInMonth->pluck('id'))
+                              ->where('nb_heures', '>', 0);
+                        });
+                    })
+            ])         
             ->columns([
                 Tables\Columns\Layout\Stack::make([
                     Tables\Columns\Layout\Split::make([
@@ -148,11 +173,57 @@ class ComptabiliteResource extends Resource
                     ViewColumn::make('semaines_heures')
                         ->label('Semaines et heures')
                         ->view('filament.tables.columns.semaines-heures')
-                        ->extraAttributes(['class' => 'flex items-center gap-2']),
+                        ->extraAttributes(['class' => 'flex items-center gap-2'])
+                        ->getStateUsing(function (User $user, string $group = null) use ($semaines) {
+                            // Détermine les semaines pertinentes pour l'affichage
+                            $relevantSemaines = $semaines;
+                            if ($group) {
+                                $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                    return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                                });
+                            }
+                            
+                            // Récupérer les comptabilités de l'utilisateur pour ces semaines
+                            $comptabilites = Comptabilite::where('fk_user', $user->id)
+                                ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                                ->where('nb_heures', '>', 0)  // Filtre les semaines avec des heures
+                                ->get()
+                                ->keyBy('fk_semaine');
+                            
+                            // Préparer les données pour la vue
+                            $result = [];
+                            foreach ($relevantSemaines as $semaine) {
+                                $compta = $comptabilites->get($semaine->id);
+                                if ($compta && $compta->nb_heures > 0) {
+                                    $result[] = [
+                                        'semaine' => $semaine,
+                                        'heures' => $compta->nb_heures,
+                                        'validated' => $compta->saisie,
+                                        'commentaire_bve' => $compta->commentaire_bve
+                                    ];
+                                }
+                            }
+                            
+                            return $result;
+                        }),
                     ViewColumn::make('total_heures')
                         ->label('Total')
                         ->view('filament.tables.columns.total-heures')
                         ->extraAttributes(['class' => 'flex items-center gap-2 font-bold text-primary-600'])
+                        ->getStateUsing(function (User $user, string $group = null) use ($semaines) {
+                            // Détermine les semaines pertinentes pour l'affichage
+                            $relevantSemaines = $semaines;
+                            if ($group) {
+                                $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                    return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                                });
+                            }
+                            
+                            // Calculer le total des heures pour ces semaines
+                            return Comptabilite::where('fk_user', $user->id)
+                                ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                                ->sum('nb_heures');
+                        }),
                 ])
             ])
             ->contentGrid([
@@ -167,16 +238,28 @@ class ComptabiliteResource extends Resource
                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                     ->color('warning')
                     ->button()
-                    ->form(function (User $record) use ($semaines) {
+                    ->form(function (User $record, string $group = null) use ($semaines) {
                         $form = [];
                         
-                        foreach ($semaines as $semaine) {
-                            $comptabilite = Comptabilite::firstOrNew([
-                                'fk_user' => $record->id,
-                                'fk_semaine' => $semaine->id,
-                            ]);
+                        // Filtrer les semaines pour ce mois si un groupe est spécifié
+                        $relevantSemaines = $semaines;
+                        if ($group) {
+                            $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                            });
+                        }
+                        
+                        // Récupérer les comptabilités existantes pour ces semaines
+                        $comptabilites = Comptabilite::where('fk_user', $record->id)
+                            ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                            ->where('nb_heures', '>', 0)
+                            ->get()
+                            ->keyBy('fk_semaine');
+                        
+                        foreach ($relevantSemaines as $semaine) {
+                            $comptabilite = $comptabilites->get($semaine->id);
+                            $totalHeures = $comptabilite ? $comptabilite->nb_heures : 0;
                             
-                            $totalHeures = $comptabilite->nb_heures ?? 0;                            
                             if ($totalHeures > 0) {
                                 $form[] = TextInput::make("commentaire_bve_{$semaine->id}")
                                     ->label("Commentaire Semaine {$semaine->numero} ({$totalHeures} h)")
@@ -213,34 +296,41 @@ class ComptabiliteResource extends Resource
                     ->modalHeading('Valider les heures')
                     ->modalDescription(fn (User $record) => "Voulez-vous valider les heures de {$record->firstName} {$record->lastName} ?")
                     ->modalSubmitActionLabel('Oui, valider')
-                    ->action(function (User $record) use ($semaines) {
-                        foreach ($semaines as $semaine) {                           
-                            $comptabilite = Comptabilite::where('fk_user', $record->id)
-                                ->where('fk_semaine', $semaine->id)
-                                ->first();
-                            
-                            $totalHeures = ($comptabilite ? $comptabilite->nb_heures : 0);
-                            
-                            if ($totalHeures > 0) {
-                                if (!$comptabilite) {
-                                    $comptabilite = new Comptabilite([
-                                        'fk_user' => $record->id,
-                                        'fk_semaine' => $semaine->id,
-                                        'nb_heures' => 0,
-                                    ]);
-                                }
-                                
-                                $comptabilite->saisie = true;
-                                $comptabilite->save();
-                            }
+                    ->action(function (User $record, string $group = null) use ($semaines) {
+                        // Filtrer les semaines pour ce mois si un groupe est spécifié
+                        $relevantSemaines = $semaines;
+                        if ($group) {
+                            $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                            });
+                        }
+                        
+                        // Récupérer les comptabilités existantes pour ces semaines
+                        $comptabilites = Comptabilite::where('fk_user', $record->id)
+                            ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                            ->where('nb_heures', '>', 0)
+                            ->get();
+                        
+                        foreach ($comptabilites as $comptabilite) {
+                            $comptabilite->saisie = true;
+                            $comptabilite->save();
                         }
                     })
-                    ->visible(fn (User $record) => 
-                        Comptabilite::where('fk_user', $record->id)
-                            ->whereIn('fk_semaine', $semaines->pluck('id'))
+                    ->visible(function (User $record, string $group = null) use ($semaines) {
+                        // Filtrer les semaines pour ce mois si un groupe est spécifié
+                        $relevantSemaines = $semaines;
+                        if ($group) {
+                            $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                            });
+                        }
+                        
+                        return Comptabilite::where('fk_user', $record->id)
+                            ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                            ->where('nb_heures', '>', 0)
                             ->where('saisie', false)
-                            ->exists()
-                    ),                
+                            ->exists();
+                    }),                
 
                 Action::make('annuler')
                     ->icon('heroicon-o-x-circle')
@@ -250,27 +340,74 @@ class ComptabiliteResource extends Resource
                     ->modalHeading('Annuler la validation des heures')
                     ->modalDescription(fn (User $record) => "Voulez-vous annuler la validation des heures de {$record->firstName} {$record->lastName} ?")
                     ->modalSubmitActionLabel('Oui, annuler')
-                    ->action(function (User $record) use ($semaines) {
-                        foreach ($semaines as $semaine) {
-                            $comptabilite = Comptabilite::where('fk_user', $record->id)
-                                ->where('fk_semaine', $semaine->id)
-                                ->first();
-                            
-                            if ($comptabilite) {
-                                $comptabilite->saisie = false;
-                                $comptabilite->save();
-                            }
+                    ->action(function (User $record, string $group = null) use ($semaines) {
+                        // Filtrer les semaines pour ce mois si un groupe est spécifié
+                        $relevantSemaines = $semaines;
+                        if ($group) {
+                            $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                            });
+                        }
+                        
+                        // Récupérer les comptabilités existantes pour ces semaines
+                        $comptabilites = Comptabilite::where('fk_user', $record->id)
+                            ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                            ->where('nb_heures', '>', 0)
+                            ->get();
+                        
+                        foreach ($comptabilites as $comptabilite) {
+                            $comptabilite->saisie = false;
+                            $comptabilite->save();
                         }
                     })
-                    ->visible(fn (User $record) => 
-                        Comptabilite::where('fk_user', $record->id)
-                            ->whereIn('fk_semaine', $semaines->pluck('id'))
-                            ->where('saisie', true)
-                            ->exists()
-                    ), 
+                    ->visible(function (User $record, string $group = null) use ($semaines) {
+                        // Filtrer les semaines pour ce mois si un groupe est spécifié
+                        $relevantSemaines = $semaines;
+                        if ($group) {
+                            $relevantSemaines = $semaines->filter(function ($semaine) use ($group) {
+                                return Carbon::parse($semaine->date_debut)->format('Y-m') === $group;
+                            });
+                        }
+                        
+                        $comptabilites = Comptabilite::where('fk_user', $record->id)
+                            ->whereIn('fk_semaine', $relevantSemaines->pluck('id'))
+                            ->where('nb_heures', '>', 0)
+                            ->get();
+                            
+                        return $comptabilites->isNotEmpty() && 
+                               $comptabilites->every(fn($compta) => $compta->saisie === true);
+                    }), 
             ])
             ->paginated(false)
             ->recordUrl(null);
+    }
+
+    /**
+     * Détermine les mois auxquels l'utilisateur appartient en fonction de ses comptabilités
+     */
+    protected static function getUserMonths(User $user, Collection $semaines)
+    {
+        $comptabilites = Comptabilite::where('fk_user', $user->id)
+            ->whereIn('fk_semaine', $semaines->pluck('id'))
+            ->where('nb_heures', '>', 0)
+            ->get();
+        
+        if ($comptabilites->isEmpty()) {
+            return [];
+        }
+        
+        // Pour chaque comptabilité, trouver le mois correspondant
+        $months = [];
+        foreach ($comptabilites as $comptabilite) {
+            $semaine = $semaines->firstWhere('id', $comptabilite->fk_semaine);
+            if ($semaine) {
+                $month = Carbon::parse($semaine->date_debut)->format('Y-m');
+                $months[] = $month;
+            }
+        }
+        
+        // Retourner tous les mois uniques
+        return array_unique($months);
     }
 
     public static function getPages(): array

@@ -1,27 +1,32 @@
 {{-- resources/views/filament/tables/columns/semaines-heures.blade.php --}}
 <div>
     @php
-        $semaines = \App\Models\Semaine::whereHas('semestre', fn($query) => $query->where('is_active', true))
-            ->orderBy('numero')
-            ->get();
-        
-        $comptabilites = \App\Models\Comptabilite::where('fk_user', $getRecord()->id)
-            ->whereIn('fk_semaine', $semaines->pluck('id'))
-            ->get()
-            ->keyBy('fk_semaine');
-        
+        // Récupération de l'état fourni par la méthode getStateUsing
+        $data = $getState();
         $lignes = [];
         
-        foreach ($semaines as $semaine) {
-            $comptabilite = $comptabilites->get($semaine->id);
-            $nbHeuresCompta = $comptabilite ? $comptabilite->nb_heures : 0;
-            
-            if ($nbHeuresCompta > 0) {
-                $lignes[] = "<span class='font-medium'>Semaine {$semaine->numero} :</span> {$nbHeuresCompta} h";
+        if (is_array($data)) {
+            foreach ($data as $item) {
+                $semaine = $item['semaine'];
+                $heures = $item['heures'];
+                $validated = $item['validated'];
+                $commentaire = $item['commentaire_bve'];
+                
+                $validatedIcon = $validated 
+                    ? '<i class="text-success-500 ti ti-check-circle"></i>' 
+                    : '<i class="text-danger-500 ti ti-x-circle"></i>';
+                
+                $ligne = "<span class='font-medium'>Semaine {$semaine->numero} :</span> {$heures} h $validatedIcon";
+                
+                if ($commentaire) {
+                    $ligne .= ' <i class="text-warning-500 ti ti-message" title="' . htmlspecialchars($commentaire) . '"></i>';
+                }
+                
+                $lignes[] = $ligne;
             }
         }
     @endphp
-    
+
     <div class="flex items-center">
         <div class="text-gray-600">
             @if(count($lignes) > 0)
