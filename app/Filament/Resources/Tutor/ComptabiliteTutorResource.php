@@ -110,7 +110,7 @@ class ComptabiliteTutorResource extends Resource
                                                 ->required()
                                                 ->rows(2),
                                         ])
-                                        ->default($heuresSupp) // <<< Ajouter ça ici
+                                        ->default($heuresSupp)
                                         ->columns(2)
                                         ->columnSpanFull(),
                                 ])                        
@@ -124,7 +124,8 @@ class ComptabiliteTutorResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('semaine.numero')
-                    ->label('Semaine'),
+                    ->label('Semaine')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('nb_heures')
                     ->label('Heures comptabilisées'),
                 Tables\Columns\TextColumn::make('commentaire_bve')
@@ -134,11 +135,14 @@ class ComptabiliteTutorResource extends Resource
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
             ])
-            ->modifyQueryUsing(fn ($query) => $query->where('fk_user', Auth::id()))
+            ->defaultSort('semaine.numero', 'asc')
+            ->modifyQueryUsing(function ($query) {
+                $user = Auth::user();
+                return $query->where('fk_user', $user->id);
+            })
             ->filters([])
             ->paginated(false)
-            ->recordUrl(null)
-            ->defaultSort('semaine_id');
+            ->recordUrl(null);
     }
 
     public static function getRelations(): array

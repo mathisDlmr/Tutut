@@ -12,13 +12,13 @@
 
 <style>
     .bg-success {
-        background-color: #22c55e; /* vert style Tailwind green-500 */
+        background-color: #22c55e;
     }
     .bg-danger {
-        background-color: #ef4444; /* rouge style Tailwind red-500 */
+        background-color: #ef4444;
     }
     .bg-primary {
-        background-color: #3b82f6; /* bleu style Tailwind blue-500 */
+        background-color: #3b82f6;
     }
 </style>
 
@@ -42,24 +42,54 @@
         <x-heroicon-o-academic-cap class="h-4 w-4 text-primary-500" />
         {{ $uvs ?: '—' }}
     </div>
-    <div class="flex gap-2" x-data="{ counted: @js($isCounted) }">
+
+    <div 
+        class="flex gap-2" 
+        x-data="{ 
+            counted: @js($isCounted), 
+            loading: false 
+        }"
+    >
         <button
             type="button"
-            @click="$wire.call('toggleCreneauCompted', {{ $creneau->id }}, true).then(() => counted = true)"
-            class="px-2 py-1 rounded text-white font-semibold"
+            @click="
+                loading = true;
+                $wire.call('toggleCreneauCompted', {{ $creneau->id }}, true)
+                    .then(() => counted = true)
+                    .finally(() => loading = false)
+            "
+            :disabled="loading"
+            class="px-3 py-1.5 min-w-[100px] rounded text-white font-semibold flex items-center justify-center transition"
             :class="counted ? 'bg-success' : 'bg-primary'"
         >
-            Présent.e
+            <template x-if="loading && !counted">
+                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+            </template>
+            <span x-show="!loading || !counted">Présent·e</span>
         </button>
 
         <button
             type="button"
-            @click="$wire.call('toggleCreneauCompted', {{ $creneau->id }}, false).then(() => counted = false)"
-            class="px-2 py-1 rounded text-white font-semibold"
+            @click="
+                loading = true;
+                $wire.call('toggleCreneauCompted', {{ $creneau->id }}, false)
+                    .then(() => counted = false)
+                    .finally(() => loading = false)
+            "
+            :disabled="loading"
+            class="px-3 py-1.5 min-w-[100px] rounded text-white font-semibold flex items-center justify-center transition"
             :class="counted === false ? 'bg-danger' : 'bg-primary'"
         >
-            Absent.e
+            <template x-if="loading && counted">
+                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+            </template>
+            <span x-show="!loading || counted !== false">Absent·e</span>
         </button>
     </div>
 </div>
-
