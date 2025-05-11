@@ -7,6 +7,8 @@ use App\Models\Comptabilite;
 use App\Models\Semaine;
 use App\Models\Semestre;
 use App\Models\User;
+use App\Models\HeuresSupplementaires;
+use App\Models\Creneaux;
 use App\Enums\Roles;
 use Filament\Resources\Resource;
 use Filament\Forms\Form;
@@ -22,6 +24,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Card;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 
 class ComptabiliteResource extends Resource
 {
@@ -263,10 +271,10 @@ class ComptabiliteResource extends Resource
                 'xl' => 4,
             ])
             ->actions([
-                Action::make('commentaire_bve')
-                    ->label('Commenter')
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                    ->color('warning')
+                Action::make('mdodifier')
+                    ->label('Modifier')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
                     ->button()
                     ->form(function (User $record, string $group = null) use ($semaines) {
                         $form = [];
@@ -298,11 +306,54 @@ class ComptabiliteResource extends Resource
                             }
                             
                             if ($totalHeures > 0) {
-                                $form[] = TextInput::make("commentaire_bve_{$semaine->id}")
-                                    ->label("Commentaire Semaine {$semaine->numero} ({$totalHeures} h)" . 
-                                          ($comptabilite && $comptabilite->saisie ? ' (Validée)' : ''))
-                                    ->default($comptabilite->commentaire_bve ?? '')
-                                    ->placeholder('Ajouter un commentaire pour cette semaine');
+                                $heuresSupplementaires = HeuresSupplementaires::where('user_id', $record->id)
+                                    ->where('semaine_id', $semaine->numero)
+                                    ->get();
+                
+                                $heuresSupplementairesItems = [];
+                                foreach ($heuresSupplementaires as $heureSup) {
+                                    $heuresSupplementairesItems[] = [
+                                        'nb_heures' => $heureSup->nb_heures,
+                                        'commentaire' => $heureSup->commentaire,
+                                    ];
+                                }
+                                
+                                $form[] = Grid::make()
+                                            ->schema([
+                                                TextInput::make("commentaire_bve_{$semaine->id}")
+                                                    ->label("Commentaire")
+                                                    ->default($comptabilite->commentaire_bve ?? '')
+                                                    ->placeholder('Ajouter un commentaire pour cette semaine')
+                                                    ->columnSpanFull(),
+                                                    
+                                                Repeater::make("heures_supp_{$semaine->id}")
+                                                    ->label('Heures supplémentaires')
+                                                    ->schema([
+                                                        Grid::make(2)
+                                                            ->schema([
+                                                                TextInput::make('nb_heures')
+                                                                    ->label("Nombre d'heures supplémentaires")
+                                                                    ->numeric()
+                                                                    ->minValue(0)
+                                                                    ->step(0.5)
+                                                                    ->required(),
+                                                                    
+                                                                TextInput::make('commentaire')
+                                                                    ->label("Justification")
+                                                                    ->placeholder('Justification des heures supplémentaires')
+                                                                    ->required(),
+                                                            ])
+                                                    ])
+                                                    ->defaultItems(0)
+                                                    ->default($heuresSupplementairesItems ?? [])
+                                                    ->collapsible()
+                                                    ->collapsed()
+                                                    ->itemLabel(fn (array $state): ?string => 
+                                                        isset($state['nb_heures']) ? "{$state['nb_heures']} heure(s) - {$state['commentaire']}" : null
+                                                    )
+                                                    ->columnSpanFull(),
+                                            ])
+                                            ->columnSpan(2);
                             }
                         }
                         
@@ -310,17 +361,53 @@ class ComptabiliteResource extends Resource
                     })
                     ->action(function (array $data, User $record) use ($semaines) {
                         foreach ($semaines as $semaine) {
-                            if (isset($data["commentaire_bve_{$semaine->id}"])) {
+                            if (isset($data["commentaire_bve_{$semaine->id}"]) || isset($data["heures_supp_{$semaine->id}"])) {
                                 $comptabilite = Comptabilite::firstOrNew([
                                     'fk_user' => $record->id,
                                     'fk_semaine' => $semaine->id,
                                 ]);
                                 
-                                if (!isset($comptabilite->nb_heures)) {
-                                    $comptabilite->nb_heures = 0;
+                                if (isset($data["commentaire_bve_{$semaine->id}"])) {
+                                    $comptabilite->commentaire_bve = $data["commentaire_bve_{$semaine->id}"];
                                 }
                                 
-                                $comptabilite->commentaire_bve = $data["commentaire_bve_{$semaine->id}"];
+                                $oldHeuresSupp = HeuresSupplementaires::where('user_id', $record->id)
+                                    ->where('semaine_id', $semaine->numero)
+                                    ->get();
+                                
+                                $oldTotalHeures = $oldHeuresSupp->sum('nb_heures');
+                                
+                                HeuresSupplementaires::where('user_id', $record->id)
+                                    ->where('semaine_id', $semaine->numero)
+                                    ->delete();
+                                
+                                $newTotalHeures = 0;
+                                
+                                if (isset($data["heures_supp_{$semaine->id}"]) && is_array($data["heures_supp_{$semaine->id}"])) {
+                                    foreach ($data["heures_supp_{$semaine->id}"] as $index => $heureSupp) {
+                                        if (isset($heureSupp['nb_heures']) && isset($heureSupp['commentaire']) && floatval($heureSupp['nb_heures']) > 0) {
+                                            HeuresSupplementaires::create([
+                                                'user_id' => $record->id,
+                                                'semaine_id' => $semaine->numero,
+                                                'nb_heures' => floatval($heureSupp['nb_heures']),
+                                                'commentaire' => $heureSupp['commentaire'],
+                                            ]);
+                                            
+                                            $newTotalHeures += floatval($heureSupp['nb_heures']);
+                                        }
+                                    }
+                                }
+                                
+                                $heuresDiff = $newTotalHeures - $oldTotalHeures;
+                                
+                                if ($heuresDiff != 0) {
+                                    if (!$comptabilite->exists) {
+                                        $comptabilite->nb_heures = max($heuresDiff, 0);
+                                    } else {
+                                        $comptabilite->nb_heures = max($comptabilite->nb_heures + $heuresDiff, 0);
+                                    }
+                                }
+                                
                                 $comptabilite->save();
                             }
                         }
