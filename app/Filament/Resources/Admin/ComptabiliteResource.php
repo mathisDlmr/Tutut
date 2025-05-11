@@ -227,12 +227,17 @@ class ComptabiliteResource extends Resource
                             $result = [];
                             foreach ($relevantSemaines as $semaine) {
                                 $compta = $comptabilites->get($semaine->id);
+
+                                $heuresSupplementaires = HeuresSupplementaires::where('user_id', $user->id)
+                                    ->where('semaine_id', $semaine->numero)
+                                    ->get();
+
                                 if ($compta && $compta->nb_heures > 0) {
                                     $result[] = [
                                         'semaine' => $semaine,
                                         'heures' => $compta->nb_heures,
                                         'validated' => $compta->saisie,
-                                        'commentaire_bve' => $compta->commentaire_bve
+                                        'heures_supp' => $heuresSupplementaires,
                                     ];
                                 }
                             }
@@ -318,42 +323,47 @@ class ComptabiliteResource extends Resource
                                     ];
                                 }
                                 
-                                $form[] = Grid::make()
-                                            ->schema([
-                                                TextInput::make("commentaire_bve_{$semaine->id}")
-                                                    ->label("Commentaire")
-                                                    ->default($comptabilite->commentaire_bve ?? '')
-                                                    ->placeholder('Ajouter un commentaire pour cette semaine')
-                                                    ->columnSpanFull(),
-                                                    
-                                                Repeater::make("heures_supp_{$semaine->id}")
-                                                    ->label('Heures supplémentaires')
-                                                    ->schema([
-                                                        Grid::make(2)
-                                                            ->schema([
-                                                                TextInput::make('nb_heures')
-                                                                    ->label("Nombre d'heures supplémentaires")
-                                                                    ->numeric()
-                                                                    ->minValue(0)
-                                                                    ->step(0.5)
-                                                                    ->required(),
-                                                                    
-                                                                TextInput::make('commentaire')
-                                                                    ->label("Justification")
-                                                                    ->placeholder('Justification des heures supplémentaires')
-                                                                    ->required(),
-                                                            ])
-                                                    ])
-                                                    ->defaultItems(0)
-                                                    ->default($heuresSupplementairesItems ?? [])
-                                                    ->collapsible()
-                                                    ->collapsed()
-                                                    ->itemLabel(fn (array $state): ?string => 
-                                                        isset($state['nb_heures']) ? "{$state['nb_heures']} heure(s) - {$state['commentaire']}" : null
-                                                    )
-                                                    ->columnSpanFull(),
-                                            ])
-                                            ->columnSpan(2);
+                                $form[] = Section::make("Semaine {$semaine->numero}" . ($comptabilite && $comptabilite->saisie ? ' (Validée)' : ''))
+                                ->schema([
+                                    Grid::make()
+                                        ->schema([
+                                            TextInput::make("commentaire_bve_{$semaine->id}")
+                                                ->label("Commentaire")
+                                                ->default($comptabilite->commentaire_bve ?? '')
+                                                ->placeholder('Ajouter un commentaire pour cette semaine')
+                                                ->columnSpanFull(),
+                                                
+                                            Repeater::make("heures_supp_{$semaine->id}")
+                                                ->label('Heures supplémentaires')
+                                                ->schema([
+                                                    Grid::make(2)
+                                                        ->schema([
+                                                            TextInput::make('nb_heures')
+                                                                ->label("Nombre d'heures supplémentaires")
+                                                                ->numeric()
+                                                                ->minValue(0)
+                                                                ->step(0.5)
+                                                                ->required(),
+                                                                
+                                                            TextInput::make('commentaire')
+                                                                ->label("Justification")
+                                                                ->placeholder('Justification des heures supplémentaires')
+                                                                ->required(),
+                                                        ])
+                                                ])
+                                                ->defaultItems(0)
+                                                ->default($heuresSupplementairesItems ?? [])
+                                                ->collapsible()
+                                                ->collapsed()
+                                                ->itemLabel(fn (array $state): ?string => 
+                                                    isset($state['nb_heures']) ? "{$state['nb_heures']} heure(s) - {$state['commentaire']}" : null
+                                                )
+                                                ->columnSpanFull(),
+                                        ])
+                                        ->columnSpan(2)
+                                ])
+                                ->collapsible()
+                                ->collapsed($comptabilite && $comptabilite->saisie);
                             }
                         }
                         
