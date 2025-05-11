@@ -24,7 +24,7 @@ class CreateTutorComptabilite extends CreateRecord
     
             \Filament\Actions\Action::make('save')
                 ->label('Enregistrer')
-                ->submit('save')
+                ->action('create')
                 ->color('primary'),
         ];
     }
@@ -39,7 +39,7 @@ class CreateTutorComptabilite extends CreateRecord
     
             \Filament\Actions\Action::make('save')
                 ->label('Enregistrer')
-                ->submit('create')
+                ->action('create')
                 ->color('primary'),
         ];
     }

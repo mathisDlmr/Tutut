@@ -7,6 +7,8 @@ use App\Models\Comptabilite;
 use App\Models\Creneaux;
 use App\Enums\Roles;
 use Filament\Forms;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -99,12 +101,14 @@ class ComptabiliteTutorResource extends Resource
                         return Forms\Components\Group::make([
                             Forms\Components\Section::make("Semaine {$semaine->numero} — du {$semaine->date_debut->format('d/m')} au {$semaine->date_fin->format('d/m')}")
                                 ->schema([
-                                    Forms\Components\Grid::make(3)
+                                    $creneaux->isEmpty()
+                                    ? Forms\Components\View::make('filament.components.empty-states.no-creneaux')
+                                        ->columnSpanFull()
+                                    : Forms\Components\Grid::make(3)
                                         ->schema(
                                             $creneaux->map(function ($creneau) use ($user) {
                                                 $tutorKey = $creneau->tutor1_id === $user->id ? 'tutor1_compted' : 'tutor2_compted';
                                                 $isCounted = $creneau->$tutorKey;
-    
                                                 return Forms\Components\View::make('filament.components.form.slot-creneau')
                                                     ->viewData([
                                                         'creneau' => $creneau,
@@ -117,21 +121,29 @@ class ComptabiliteTutorResource extends Resource
                                     Forms\Components\Repeater::make("heures_supplementaires_{$semaine->id}")
                                         ->label('Heures supplémentaires')
                                         ->schema([
-                                            Forms\Components\TextInput::make('nb_heures')
-                                                ->label('Durée (heures)')
-                                                ->numeric()
-                                                ->minValue(0.5)
-                                                ->step(0.5)
-                                                ->required(),
-                                            Forms\Components\Textarea::make('commentaire')
-                                                ->label('Commentaire')
-                                                ->required()
-                                                ->rows(2),
+                                            Grid::make(2)
+                                                ->schema([
+                                                    TextInput::make('nb_heures')
+                                                        ->label('Durée (heures)')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->step(0.5)
+                                                        ->default('')
+                                                        ->required(),
+                                                    TextInput::make('commentaire')
+                                                        ->label("Justification")
+                                                        ->placeholder('Justification des heures supplémentaires')
+                                                        ->required(),
+                                                ])
                                         ])
-                                        ->default($heuresSupp)
-                                        ->columns(2)
+                                        ->default($heuresSupp ?? [])
+                                        ->collapsible()
+                                        ->collapsed()
+                                        ->itemLabel(fn (array $state): ?string =>
+                                            isset($state['nb_heures']) ? "{$state['nb_heures']} heure(s) - {$state['commentaire']}" : null
+                                        )
                                         ->columnSpanFull()
-                                        ->visible(fn () => !$filterUncounted),
+                                        ->visible(fn () => !$filterUncounted)
                                 ])
                         ])->columnSpanFull();
                     })->toArray();
