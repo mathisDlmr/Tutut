@@ -6,6 +6,7 @@ use App\Filament\Resources\Tutor\ComptabiliteTutorResource;
 use App\Models\Creneaux;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
 class CreateTutorComptabilite extends CreateRecord
@@ -26,6 +27,32 @@ class CreateTutorComptabilite extends CreateRecord
                 ->submit('save')
                 ->color('primary'),
         ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('cancel')
+                ->label('Annuler')
+                ->url($this->previousUrl ?? static::getResource()::getUrl())
+                ->color('gray'),
+    
+            \Filament\Actions\Action::make('save')
+                ->label('Enregistrer')
+                ->submit('create')
+                ->color('primary'),
+        ];
+    }
+
+    public function getTitle(): string
+    {
+        return 'Confirmer les heures';
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        $user = Auth::user();
+        return "Pensez à enregistrer avant de quitter cette page";
     }
 
     public function toggleCreneauCompted($creneauId, $value)

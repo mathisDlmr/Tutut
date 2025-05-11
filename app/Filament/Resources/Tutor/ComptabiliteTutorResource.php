@@ -83,7 +83,7 @@ class ComptabiliteTutorResource extends Resource
                         if ($filterUncounted) {
                             $creneaux = $creneaux->filter(function ($creneau) use ($user) {
                                 $key = $creneau->tutor1_id === $user->id ? 'tutor1_compted' : 'tutor2_compted';
-                                return $creneau->$key === null; // ✅ strictement null
+                                return $creneau->$key === null;
                             });
                         }
     
@@ -130,7 +130,8 @@ class ComptabiliteTutorResource extends Resource
                                         ])
                                         ->default($heuresSupp)
                                         ->columns(2)
-                                        ->columnSpanFull(),
+                                        ->columnSpanFull()
+                                        ->visible(fn () => !$filterUncounted),
                                 ])
                         ])->columnSpanFull();
                     })->toArray();

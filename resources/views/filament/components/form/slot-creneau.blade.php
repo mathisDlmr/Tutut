@@ -81,7 +81,7 @@
             "
             :disabled="loading"
             class="px-3 py-1.5 min-w-[100px] rounded text-white font-semibold flex items-center justify-center transition"
-            :class="counted === false ? 'bg-danger' : 'bg-primary'"
+            :class="counted == false ? 'bg-danger' : 'bg-primary'"
         >
             <template x-if="loading && counted">
                 <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
