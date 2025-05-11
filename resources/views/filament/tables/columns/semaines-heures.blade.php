@@ -1,35 +1,41 @@
 {{-- resources/views/filament/tables/columns/semaines-heures.blade.php --}}
 <div>
     @php
-        $data = $getState();
-        $lignes = [];
-
-        if (is_array($data)) {
-            foreach ($data as $item) {
-                $semaine = $item['semaine'];
-                $heures = $item['heures'];
-                $validated = $item['validated'];
-                $commentaire = $item['commentaire_bve'];
-
-                $validatedIcon = $validated
-                    ? '<i class="text-success-500 ti ti-check-circle"></i>'
-                    : '<i class="text-danger-500 ti ti-x-circle"></i>';
-
-                $ligne = "<span class='font-medium'>Semaine {$semaine->numero} :</span> {$heures} h $validatedIcon";
-
-                if ($commentaire) {
-                    $ligne .= ' <i class="text-warning-500 ti ti-message" title="' . htmlspecialchars($commentaire) . '"></i>';
+    $data = $getState();
+    $content = '';
+    
+    if (is_array($data)) {
+        foreach ($data as $item) {
+            $semaine = $item['semaine'];
+            $heures = $item['heures'];
+            $validated = $item['validated'];
+            $heures_supp = $item['heures_supp'] ?? [];
+            
+            $validatedIcon = $validated
+                ? '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#22c55e" class="inline-block mb-1 w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                   </svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#ef4444" class="inline-block mb-1 w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                   </svg>';
+            
+            $content .= "<span class='font-medium'>Semaine {$semaine->numero} :</span> {$heures} h $validatedIcon<br>";
+            
+            if (!empty($heures_supp)) {
+                $content .= "<ul class='text-gray-600 text-sm italic'>";
+                foreach ($heures_supp as $hs) {
+                    $content .= "<li>- {$hs->nb_heures}h :  {$hs->commentaire}</li>";
                 }
-
-                $lignes[] = $ligne;
+                $content .= "</ul>";
             }
         }
+    }
     @endphp
-
+    
     <div class="flex items-center">
         <div class="text-gray-600 w-full">
-            @if(count($lignes) > 0)
-                {!! implode('<br>', $lignes) !!}
+            @if(!empty($content))
+                {!! $content !!}
             @else
                 <div class="flex items-center space-x-2 p-2 text-gray-400 text-sm">
                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
