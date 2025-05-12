@@ -17,6 +17,7 @@ use App\Filament\Resources\Tutee\InscriptionCreneauResource as TuteeInscriptionC
 use App\Filament\Resources\Tutor\ComptabiliteTutorResource;
 use App\Filament\Resources\Tutor\CreneauResource as TutorCreneauResource;
 use App\Filament\Resources\Tutor\FeedbackResource as TutorFeedbackResource;
+use App\Filament\Resources\Tutor\TutorApplicationResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -71,6 +72,7 @@ class AdminPanelProvider extends PanelProvider
                 TutorFeedbackResource::class,
                 TuteeInscriptionCreneauResource::class,
                 BecomeTutorResource::class,
+                TutorApplicationResource::class,
             ])
             ->pages([
                 Dashboard::class,
