@@ -11,6 +11,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class TutorApplicationResource extends Resource
@@ -64,6 +65,10 @@ class TutorApplicationResource extends Resource
                             ->distinct()
                             ->pluck('semester', 'semester');
                     }),
+                Tables\Filters\Filter::make('pending')
+                    ->label('En attente uniquement')
+                    ->query(fn (Builder $query) => $query->where('status', 'pending'))
+                    ->default(),
             ])
             ->actions([
                 Action::make('view')
