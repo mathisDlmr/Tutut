@@ -1,6 +1,7 @@
 <?php
 namespace App\Filament\Resources\Tutee;
 
+use App\Enums\Roles;
 use App\Models\UV;
 use App\Models\BecomeTutor;
 use Filament\Forms;
@@ -15,11 +16,16 @@ class BecomeTutorResource extends Resource
     
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?string $navigationLabel = 'Devenir Tuteur.ice';
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user && Auth::user()->role === Roles::Tutee->value;
+    }  
     
     public static function form(Form $form): Form
     {
         $currentUser = Auth::user();
-        $existingRequest = $currentUser->becomeTutorRequest;
         
         return $form
             ->schema([
