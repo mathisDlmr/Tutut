@@ -11,6 +11,8 @@ use App\Filament\Resources\Admin\SalleResource;
 use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
 use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
 use App\Filament\Resources\Admin\TuteursEmployesResource as AdminTuteursEmployesResource;
+use App\Filament\Resources\Tutee\BecomeTutorResource;
+use App\Filament\Resources\Tutee\BecomeTutorResource\Pages\BecomeTutor;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource as TuteeInscriptionCreneauResource;
 use App\Filament\Resources\Tutor\ComptabiliteTutorResource;
 use App\Filament\Resources\Tutor\CreneauResource as TutorCreneauResource;
@@ -68,6 +70,7 @@ class AdminPanelProvider extends PanelProvider
                 ComptabiliteTutorResource::class,
                 TutorFeedbackResource::class,
                 TuteeInscriptionCreneauResource::class,
+                BecomeTutorResource::class,
             ])
             ->pages([
                 Dashboard::class,

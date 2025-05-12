@@ -37,4 +37,9 @@ class User extends Authenticatable implements HasName
     {
         return $this->hasMany(Comptabilite::class, 'fk_user');
     }
+
+    public function becomeTutorRequest()
+    {
+        return $this->hasOne(BecomeTutor::class, 'fk_user');
+    }
 }

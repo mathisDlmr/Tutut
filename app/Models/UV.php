@@ -5,8 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Filament\Models\Contracts\HasName;
-use Filament\Panel;
-use App\Enums\Roles;
 
 class UV extends Authenticatable implements HasName
 {
