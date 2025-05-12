@@ -97,7 +97,7 @@ class CreateBecomeTutorRequest extends CreateRecord
             }
             $data['UVs'] = $uvList;
         }
-        
+        $data['status'] = 'pending';
         $data['fk_user'] = Auth::id();
         return $data;
     }

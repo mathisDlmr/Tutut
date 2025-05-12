@@ -26,9 +26,12 @@ class BecomeTutorResource extends Resource
     public static function form(Form $form): Form
     {
         $currentUser = Auth::user();
+        $existingRequest = $currentUser->becomeTutorRequest;
         
         return $form
             ->schema([
+                Forms\Components\View::make('filament.components.refused.tutor-rejected')
+                    ->visible($existingRequest && $existingRequest->status === 'rejected'),
                 Forms\Components\Section::make('Candidature Tuteur.ice')
                     ->description('Remplissez ce formulaire pour devenir tuteur.ice')
                     ->schema([
