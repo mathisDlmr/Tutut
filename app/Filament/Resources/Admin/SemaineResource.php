@@ -13,6 +13,7 @@ use App\Models\Semaine;
 use App\Models\Semestre;
 use App\Models\Creneaux;
 use App\Models\DispoSalle;
+use App\Models\CalendarOverride;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DatePicker;
 use Carbon\Carbon;
@@ -152,7 +153,7 @@ class SemaineResource extends Resource
                     ->icon('heroicon-o-lock-open')
                     ->requiresConfirmation()
                     ->action(function (Semaine $record) {
-                        Creneaux::all()->update(['open' => false]);
+                        Creneaux::query()->update(['open' => false]);
                         Creneaux::where('fk_semaine', $record->id)->update(['open' => true]);
                         Notification::make()
                             ->title("Tous les créneaux de la semaine {$record->numero} sont maintenant ouverts.")
@@ -235,7 +236,17 @@ class SemaineResource extends Resource
         foreach ($jours as $jour) {
             $jourIndex = array_search($jour, array_keys($joursMap));
             $dateDuJour = $baseDate->copy()->addDays($jourIndex);
+            
+            $override = CalendarOverride::where('date', Carbon::parse($dateDuJour))->first();            
+            if ($override && $override->is_holiday) {
+                continue;
+            }
+            
             $jourLabel = $jour;
+            if ($override && $override->day_template) {
+                $jourLabel = $override->day_template;
+            }
+            
             $horairesDuJour = $horairesStandards[$jour] ?? [];
             $durées = $duréesStandards;
     
@@ -254,6 +265,14 @@ class SemaineResource extends Resource
                     $jourLabel = 'Finaux';
                     $horairesDuJour = array_keys($horairesSpeciaux);
                     $durées = $horairesSpeciaux;
+                }
+            }
+            
+            if ($override && $override->day_template) {
+                $jourLabel = $override->day_template;
+                if (in_array($jourLabel, array_keys($horairesStandards))) {
+                    $horairesDuJour = $horairesStandards[$jourLabel] ?? [];
+                    $durées = $duréesStandards;
                 }
             }
     
