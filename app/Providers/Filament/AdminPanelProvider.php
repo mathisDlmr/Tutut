@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\BilanMensuelComptabilite;
+use App\Filament\Pages\CalendarManager;
 use App\Filament\Pages\SendEmail;
 use App\Filament\Pages\SettingsPage;
 use App\Filament\Pages\TutorManageUvs;
@@ -12,7 +12,6 @@ use App\Filament\Resources\Admin\SemaineResource as AdminSemaineResource;
 use App\Filament\Resources\Admin\SemestreResource as AdminSemestreResource;
 use App\Filament\Resources\Admin\TuteursEmployesResource as AdminTuteursEmployesResource;
 use App\Filament\Resources\Tutee\BecomeTutorResource;
-use App\Filament\Resources\Tutee\BecomeTutorResource\Pages\BecomeTutor;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource as TuteeInscriptionCreneauResource;
 use App\Filament\Resources\Tutor\ComptabiliteTutorResource;
 use App\Filament\Resources\Tutor\CreneauResource as TutorCreneauResource;
@@ -79,6 +78,7 @@ class AdminPanelProvider extends PanelProvider
                 SendEmail::class,
                 TutorManageUvs::class,
                 SettingsPage::class,
+                CalendarManager::class,
             ])   
             ->widgets([
                 TutorCreneauxTableWidget::class,

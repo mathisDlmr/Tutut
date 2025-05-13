@@ -22,4 +22,9 @@ class Semestre extends Model
         self::query()->update(['is_active' => false]);
         $semestre->update(['is_active' => true]);
     }    
+
+    public static function getActive()
+    {
+        return self::where('is_active', true)->first();
+    }
 }

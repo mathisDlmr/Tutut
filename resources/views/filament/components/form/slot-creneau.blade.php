@@ -11,7 +11,7 @@
 @endphp
 
 <style>
-    .bg-success {
+    .bg-success { /* On utilise des nouvelles classes pour bypass le JIT de Tailwind */
         background-color: #22c55e;
     }
     .bg-danger {
