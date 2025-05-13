@@ -16,6 +16,7 @@ class FeedbackResource extends Resource
 {
     protected static ?string $model = Feedback::class;
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
+    protected static ?int $navigationSort = 2;
 
     public static function getLabel(): string
     {

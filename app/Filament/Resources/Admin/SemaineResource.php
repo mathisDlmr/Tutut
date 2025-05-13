@@ -26,6 +26,7 @@ class SemaineResource extends Resource
     protected static ?string $model = Semaine::class;
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationGroup = 'Gestion';
+    protected static ?int $navigationSort = 1;
 
     public static function canAccess(): bool
     {

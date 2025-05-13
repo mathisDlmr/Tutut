@@ -21,6 +21,7 @@ class TutorApplicationResource extends Resource
     protected static ?string $label = 'Candidatures Tuteur.ice';
     protected static ?string $pluralModelLabel = 'Candidatures Tuteur.ice';
     protected static ?string $navigationGroup = 'Gestion';
+    protected static ?int $navigationSort = 6;
 
     public static function canAccess(): bool
     {

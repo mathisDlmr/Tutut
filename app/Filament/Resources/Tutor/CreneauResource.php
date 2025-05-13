@@ -21,6 +21,7 @@ class CreneauResource extends Resource
     protected static ?string $navigationLabel = 'Shotgun Créneaux';
     protected static ?string $pluralModelLabel = 'Créneaux';
     protected static ?string $navigationGroup = 'Tutorat';
+    protected static ?int $navigationSort = 1;
 
     public static function canAccess(): bool
     {

@@ -21,8 +21,9 @@ use Illuminate\Support\Facades\Auth;
 class SalleResource extends Resource
 {
     protected static ?string $model = Salle::class;
-    protected static ?string $navigationIcon = 'heroicon-o-table-cells';
+    protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
     protected static ?string $navigationGroup = 'Gestion';
+    protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
     {

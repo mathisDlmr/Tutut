@@ -23,6 +23,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     protected static string $view = 'filament.pages.tutor-manage-uvs';
     protected static ?string $title = 'Mes UVs proposées';
     protected static ?string $navigationGroup = 'Tutorat';
+    protected static ?int $navigationSort = 3;
 
     public array $languagesForm = [];
     public $selected_code;

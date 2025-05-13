@@ -16,6 +16,7 @@ class BecomeTutorResource extends Resource
     
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?string $navigationLabel = 'Devenir Tuteur.ice';
+    protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
     {

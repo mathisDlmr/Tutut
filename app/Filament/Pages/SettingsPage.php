@@ -21,6 +21,7 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable
     protected static ?string $navigationIcon = 'heroicon-o-cog';
     protected static string $view = 'filament.pages.settings-page';
     protected static ?string $title = 'Settings';
+    protected static ?int $navigationSort = 4;
 
     public static function canAccess(): bool
     {

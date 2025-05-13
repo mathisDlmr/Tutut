@@ -22,6 +22,7 @@ class ComptabiliteTutorResource extends Resource
     protected static ?string $label = 'Comptabilité';
     protected static ?string $pluralModelLabel = 'Comptabilité';
     protected static ?string $navigationGroup = 'Tutorat';
+    protected static ?int $navigationSort = 2;
 
     public static function canAccess(): bool
     {

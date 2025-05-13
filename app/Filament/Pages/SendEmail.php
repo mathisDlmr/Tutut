@@ -20,6 +20,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     protected static string $view = 'filament.pages.send-email';
     protected static ?string $navigationLabel = 'Envoyer un mail';
     protected static ?string $navigationGroup = 'Gestion';
+    protected static ?int $navigationSort = 2;
 
     public $template;
     public $templateName;
