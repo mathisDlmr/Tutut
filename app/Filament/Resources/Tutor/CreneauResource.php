@@ -123,7 +123,7 @@ class CreneauResource extends Resource
                     ->color(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
-                        ($record->tutor1_id === null && $record->tutor2_id === null) ||$record->tutor1_id === $userId
+                        ($record->tutor1_id === null) || $record->tutor1_id === $userId
                     )
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor1_id === $userId) {
@@ -138,8 +138,7 @@ class CreneauResource extends Resource
                     ->color(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
-                        ($record->tutor1_id === null && $record->tutor2_id === null) ||
-                        $record->tutor2_id === $userId
+                        ($record->tutor2_id === null) || $record->tutor2_id === $userId
                     )
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor2_id === $userId) {
