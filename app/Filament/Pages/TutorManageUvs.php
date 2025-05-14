@@ -26,7 +26,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     protected static ?int $navigationSort = 3;
 
     public array $languagesForm = [];
-    public $selected_code;
+    public $selected_codes;
     public $code;
     public $intitule;
 
@@ -110,64 +110,74 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     {
         return $form->schema([
             Forms\Components\Section::make('Proposer une UV')
-            ->description('Si vous ne trouvez pas l’UV que vous cherchez, vous pouvez demander à ' . 
-                User::where('role', Roles::EmployedPrivilegedTutor->value)
-                ->get()
-                ->map(fn ($user) => "{$user->firstName} {$user->lastName}")
-                ->join(' ou ')
-            . ' de l\'ajouter')
-            ->schema([
-                Forms\Components\Select::make('selected_code')
-                ->label('UV existante')
-                ->options(
-                    \App\Models\UV::whereNotIn('code', Auth::user()->proposedUvs()->pluck('code'))
+                ->description('Si vous ne trouvez pas l’UV que vous cherchez, vous pouvez demander à ' . 
+                    User::where('role', Roles::EmployedPrivilegedTutor->value)
                     ->get()
-                    ->mapWithKeys(fn ($uv) => [$uv->code => "{$uv->code} - {$uv->intitule}"])
-                )
-                ->searchable()
-                ->reactive()
-                ->requiredWithout(['code', 'intitule']),
-            ]),
+                    ->map(fn ($user) => "{$user->firstName} {$user->lastName}")
+                    ->join(' ou ')
+                . ' de l\'ajouter')
+                ->schema([
+                    Forms\Components\Select::make('selected_codes')
+                        ->label('UV existante')
+                        ->options(
+                            \App\Models\UV::whereNotIn('code', Auth::user()->proposedUvs()->pluck('code'))
+                            ->get()
+                            ->mapWithKeys(fn ($uv) => [$uv->code => "{$uv->code} - {$uv->intitule}"])
+                        )
+                        ->searchable()
+                        ->multiple()
+                        ->reactive()
+                        ->requiredWithout(['code', 'intitule']),
+                ]),
         
             Forms\Components\Section::make('OU créer une nouvelle UV')
-            ->description('Créez une nouvelle UV avec son code et son intitulé')
-            ->schema([
-                Forms\Components\TextInput::make('code')
-                ->label('Code de l’UV')
-                ->maxLength(10)
-                ->requiredWithout('selected_code'),
-        
-                Forms\Components\TextInput::make('intitule')
-                ->label('Intitulé de l’UV')
-                ->maxLength(255)
-                ->requiredWithout('selected_code'),
-            ])
-            ->columns(2)
-            ->visible(fn () => Auth::user()->role === Roles::EmployedPrivilegedTutor->value),
+                ->description('Créez une nouvelle UV avec son code et son intitulé')
+                ->schema([
+                    Forms\Components\TextInput::make('code')
+                    ->label('Code de l’UV')
+                    ->maxLength(10)
+                    ->requiredWithout('selected_codes'),
+            
+                    Forms\Components\TextInput::make('intitule')
+                    ->label('Intitulé de l’UV')
+                    ->maxLength(255)
+                    ->requiredWithout('selected_codes'),
+                ])
+                ->columns(2)
+                ->visible(fn () => Auth::user()->role === Roles::EmployedPrivilegedTutor->value),
         ])->statePath('');
     }               
 
     public function createUv()
     {
         $data = $this->form->getState();
-    
-        if (!empty($data['selected_code'])) {
-            $uv = UV::find($data['selected_code']);
-        } else {
+
+        if (!empty($data['selected_codes']) && is_array($data['selected_codes'])) {
+            Auth::user()->proposedUvs()->syncWithoutDetaching($data['selected_codes']);
+
+            Notification::make()
+                ->title('UV(s) ajoutée(s)')
+                ->success()
+                ->body('Vos UVs ont été mises à jour avec succès.')
+                ->send();
+        } elseif (!empty($data['code']) && !empty($data['intitule'])) {
             $uv = UV::firstOrCreate(
                 ['code' => $data['code']],
                 ['intitule' => $data['intitule']]
             );
-        }
-    
-        if ($uv) {
+
             Auth::user()->proposedUvs()->syncWithoutDetaching([$uv->code]);
-            session()->flash('success', 'UV ajoutée à vos matières.');
+
+            Notification::make()
+                ->title('UV(s) ajoutée(s)')
+                ->success()
+                ->body("L'UV a été créé et vos UVs ont été mises à jour avec succès.")
+                ->send();
         }
-    
-        $this->reset(['selected_code', 'code', 'intitule']);
+
+        $this->reset(['selected_codes', 'code', 'intitule']);
         $this->form->fill();
-    }     
+    }    
 
     public function table(Table $table): Table
     {
