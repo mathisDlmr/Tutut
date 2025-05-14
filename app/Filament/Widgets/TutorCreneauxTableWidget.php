@@ -31,6 +31,7 @@ class TutorCreneauxTableWidget extends BaseWidget
 
         return Creneaux::query()
             ->with(['tutor1.proposedUvs', 'tutor2.proposedUvs', 'salle', 'semaine', 'inscriptions'])
+            ->where('start','>=',now())
             ->where(function ($query) use ($user) {
                 $query->where('tutor1_id', $user->id)
                       ->orWhere('tutor2_id', $user->id);
