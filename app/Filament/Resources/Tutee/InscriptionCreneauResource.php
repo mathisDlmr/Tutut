@@ -6,6 +6,9 @@ use App\Enums\Roles;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource\Pages;
 use App\Models\Creneaux;
 use App\Models\Inscription;
+use App\Models\Semaine;
+use App\Models\Semestre;
+use Carbon\Carbon;
 use Filament\Resources\Resource;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -17,7 +20,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\Split;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InscriptionCreneauResource extends Resource
 {
@@ -50,6 +61,17 @@ class InscriptionCreneauResource extends Resource
         $userId = Auth::id();
 
         return $table
+            ->headerActions([
+                Action::make('export_excel')
+                    ->label('Exporter vers Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->button()
+                    ->visible(fn() => Auth::user()->role === Roles::Administrator->value)
+                    ->action(function () {
+                        return self::exportExcel();
+                    })
+            ])
             ->query(
                 Creneaux::query()
                     ->with([
@@ -259,6 +281,8 @@ class InscriptionCreneauResource extends Resource
             ])
             ->paginated(false)
             ->recordUrl(null);
+            
+        return $table;
     }          
 
     public static function getPages(): array
@@ -267,4 +291,255 @@ class InscriptionCreneauResource extends Resource
             'index' => Pages\ListInscriptionCreneaus::route('/'),
         ];
     }
+    
+public static function exportExcel()
+{
+    $activeSemester = Semestre::getActive();
+    if (!$activeSemester) {
+        return response()->json(['error' => 'Aucun semestre actif trouvé'], 404);
+    }
+    
+    $spreadsheet = new Spreadsheet();
+    $spreadsheet->getProperties()
+        ->setCreator('Système de Tutorat')
+        ->setTitle('Créneaux du Semestre')
+        ->setDescription('Export des créneaux du semestre actif');
+
+    $semaines = Semaine::where('fk_semestre', $activeSemester->code)
+        ->orderBy('date_debut')
+        ->get();
+
+    $spreadsheet->removeSheetByIndex(0);
+    
+    foreach ($semaines as $semaine) {
+        $weekNumber = $semaine->numero_semaine ?? ($semaine->id - $semaines->first()->id + 1);
+        $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, "Semaine $weekNumber");
+        $spreadsheet->addSheet($sheet);
+        $spreadsheet->setActiveSheetIndexByName("Semaine $weekNumber");
+        
+        // Premier Creneau
+        $sheet->getColumnDimension('A')->setWidth(25);
+        $sheet->getColumnDimension('B')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(30);
+
+        $sheet->getColumnDimension('E')->setWidth(5); // Separateur
+
+        // Second Creneau
+        $sheet->getColumnDimension('F')->setWidth(25);
+        $sheet->getColumnDimension('G')->setWidth(25);
+        $sheet->getColumnDimension('H')->setWidth(20);
+        $sheet->getColumnDimension('I')->setWidth(30);
+
+        $sheet->getColumnDimension('J')->setWidth(5); // Separateur
+
+        // Troisieme creneau
+        $sheet->getColumnDimension('K')->setWidth(25);
+        $sheet->getColumnDimension('L')->setWidth(25);
+        $sheet->getColumnDimension('M')->setWidth(20);
+        $sheet->getColumnDimension('N')->setWidth(30);
+        
+        $creneaux = Creneaux::with([
+                'tutor1.proposedUvs', 
+                'tutor2.proposedUvs',
+                'inscriptions.tutee',
+                'semaine'
+            ])
+            ->where('fk_semaine', $semaine->id)
+            ->whereHas('inscriptions')
+            ->orderBy('start')
+            ->get();
+    
+        $creneauxByDay = $creneaux->groupBy(function ($creneau) {
+            return $creneau->start->format('Y-m-d');
+        });
+        
+        $rowIndex = 1;
+
+        // Titre d'onglet'
+        $sheet->setCellValue('A' . $rowIndex, "Créneaux de la Semaine $weekNumber");
+        $sheet->mergeCells('A' . $rowIndex . ':N' . $rowIndex);
+        $sheet->getStyle('A' . $rowIndex)->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A' . $rowIndex)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $rowIndex += 2;
+        
+        foreach ($creneauxByDay as $day => $dayCreneaux) {
+            // Header de feuille
+            $dayHeader = ucfirst(Carbon::parse($day)->translatedFormat('l d F Y'));
+            $sheet->setCellValue('A' . $rowIndex, $dayHeader);
+            $sheet->mergeCells('A' . $rowIndex . ':N' . $rowIndex);
+            $sheet->getStyle('A' . $rowIndex)->getFont()->setBold(true)->setSize(12);
+            $sheet->getStyle('A' . $rowIndex)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('DDEBF7');
+            $rowIndex++;
+            
+            $creneauxByTime = $dayCreneaux->groupBy(function ($creneau) {
+                return $creneau->start->format('H:i');
+            });
+            foreach ($creneauxByTime as $time => $timeCreneaux) {
+                // header heure
+                $firstCreneau = $timeCreneaux->first();
+                $timeHeader = $firstCreneau->start->format('H:i') . ' à ' . $firstCreneau->end->format('H:i');
+                $sheet->setCellValue('A' . $rowIndex, $timeHeader);
+                $sheet->mergeCells('A' . $rowIndex . ':N' . $rowIndex);
+                $sheet->getStyle('A' . $rowIndex)->getFont()->setItalic(true);
+                $sheet->getStyle('A' . $rowIndex)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F2F2F2');
+                $rowIndex++;
+                
+                $chunkedCreneaux = array_chunk($timeCreneaux->all(), 3);
+                foreach ($chunkedCreneaux as $creneauxGroup) {
+                    $startRow = $rowIndex;
+                    
+                    $maxHeaderRows = 0;
+                    $maxTuteeRows = 0;
+                    $tuteeStartRows = [];
+                    
+                    // On met les infos pour chaque creneau (s'il y a des infos à mettre)
+                    foreach ($creneauxGroup as $index => $creneau) {
+                        $headerRows = 3;
+                        if ($creneau->tutor1 && $creneau->tutor1->proposedUvs->count() > 0) {
+                            $headerRows++;
+                        }
+                        
+                        if ($creneau->tutor2) {
+                            $headerRows++;
+                            if ($creneau->tutor2->proposedUvs->count() > 0) {
+                                $headerRows++;
+                            }
+                        }
+                        
+                        $maxHeaderRows = max($maxHeaderRows, $headerRows);
+
+                        $tuteeRows = max(1, count($creneau->inscriptions));
+                        $maxTuteeRows = max($maxTuteeRows, $tuteeRows);
+                        
+                        $tuteeStartRows[$index] = $headerRows;
+                    }
+                    
+                    foreach ($creneauxGroup as $index => $creneau) {
+                        $colOffset = $index * 5;
+                        $localRowIndex = $startRow;
+                        
+                        // Header salle
+                        $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, 'Salle: ' . $creneau->fk_salle);
+                        $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                        $sheet->getStyle(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex)->getFont()->setBold(true);
+                        $localRowIndex++;
+                        
+                        // Tutor 1
+                        $tutor1Name = $creneau->tutor1 ? ($creneau->tutor1->firstName . ' ' . $creneau->tutor1->lastName) : '-';
+                        $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, 'Tuteur 1: ' . $tutor1Name);
+                        $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                        $sheet->getStyle(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex)
+                            ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2EFDA');
+                        $localRowIndex++;
+                        
+                        // Tutor 1 UVs
+                        if ($creneau->tutor1 && $creneau->tutor1->proposedUvs->count() > 0) {
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, 'UVs proposées:');
+                            
+                            $uvs = $creneau->tutor1->proposedUvs->pluck('code')->sort()->implode(', ');
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(2 + $colOffset) . $localRowIndex, $uvs);
+                            $sheet->mergeCells(Coordinate::stringFromColumnIndex(2 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                            $localRowIndex++;
+                        }
+                        
+                        // Tutor 2
+                        if ($creneau->tutor2) {
+                            $tutor2Name = $creneau->tutor2->firstName . ' ' . $creneau->tutor2->lastName;
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, 'Tuteur 2: ' . $tutor2Name);
+                            $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                            $sheet->getStyle(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex)
+                                ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E2EFDA');
+                            $localRowIndex++;
+                            
+                            // Tutor 2 UVs
+                            if ($creneau->tutor2->proposedUvs->count() > 0) {
+                                $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, 'UVs proposées:');
+                                
+                                $uvs = $creneau->tutor2->proposedUvs->pluck('code')->sort()->implode(', ');
+                                $sheet->setCellValue(Coordinate::stringFromColumnIndex(2 + $colOffset) . $localRowIndex, $uvs);
+                                $sheet->mergeCells(Coordinate::stringFromColumnIndex(2 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                                $localRowIndex++;
+                            }
+                        }
+                        
+                        // Cellules vides pour s'alligner
+                        while ($localRowIndex < $startRow + $maxHeaderRows) {
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, '');
+                            $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                            $localRowIndex++;
+                        }
+                        
+                        // Header pour les tutee
+                        $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, 'Tutorés inscrits:');
+                        $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                        $sheet->getStyle(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex)->getFont()->setBold(true);
+                        $localRowIndex++;
+                        
+                        // Liste tous les tutee
+                        $tuteeRowsWritten = 0;  
+                        foreach ($creneau->inscriptions as $inscription) {
+                            $tutee = $inscription->tutee;
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, $tutee->firstName . ' ' . $tutee->lastName);
+                            $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(2 + $colOffset) . $localRowIndex);
+                            
+                            // UVs du Tutee
+                            $uvsSouhaites = collect(json_decode($inscription->enseignements_souhaites ?? '[]'))->sort()->implode(', ');
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(3 + $colOffset) . $localRowIndex, $uvsSouhaites);
+                            $sheet->mergeCells(Coordinate::stringFromColumnIndex(3 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                            
+                            $localRowIndex++;
+                            $tuteeRowsWritten++;
+                        }
+                        
+                        // Rangées vides pour s'alligner
+                        while ($tuteeRowsWritten < $maxTuteeRows) {
+                            $sheet->setCellValue(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex, '');
+                            $sheet->mergeCells(Coordinate::stringFromColumnIndex(1 + $colOffset) . $localRowIndex . ':' . Coordinate::stringFromColumnIndex(4 + $colOffset) . $localRowIndex);
+                            $localRowIndex++;
+                            $tuteeRowsWritten++;
+                        }
+                    }
+                    
+                    $totalHeight = $maxHeaderRows + 1 + $maxTuteeRows;
+                    $rowIndex = $startRow + $totalHeight;
+                    
+                    if (!empty($creneauxGroup)) {
+                        $borderStyle = [
+                            'borders' => [
+                                'outline' => [
+                                    'borderStyle' => Border::BORDER_MEDIUM,
+                                    'color' => ['rgb' => '000000'],
+                                ],
+                            ],
+                        ];
+                        
+                        foreach ($creneauxGroup as $index => $creneau) {
+                            $colStart = Coordinate::stringFromColumnIndex(1 + $index * 5);
+                            $colEnd = Coordinate::stringFromColumnIndex(4 + $index * 5);
+                            $sheet->getStyle($colStart . $startRow . ':' . $colEnd . ($rowIndex - 1))->applyFromArray($borderStyle);
+                        }
+                    }                    
+                    $rowIndex++;
+                }
+            }
+            $rowIndex++;
+        }
+    }
+    
+    // Def première feuille active
+    if ($spreadsheet->getSheetCount() > 0) {
+        $spreadsheet->setActiveSheetIndex(0);
+    }   
+    
+    // Réponse Excel
+    return new StreamedResponse(function () use ($spreadsheet) {
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+    }, 200, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition' => 'attachment; filename="creneaux_semestre.xlsx"',
+        'Cache-Control' => 'max-age=0',
+    ]);
+}
 }
