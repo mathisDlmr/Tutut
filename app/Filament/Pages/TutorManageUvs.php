@@ -11,7 +11,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use App\Enums\Roles;
 use App\Models\User;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Notifications\Notification;
 
 class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
@@ -29,6 +28,9 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     public $selected_codes;
     public $code;
     public $intitule;
+    
+    // Propriété réactive pour l'état du bouton
+    public $canSaveUv = false;
 
     public static function canAccess(): bool
     {
@@ -67,6 +69,8 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
         $this->form->fill([
             'languages' => $this->languagesForm['languages'],
         ]);
+        
+        $this->updateCanSaveUv();
     }       
 
     public function formLanguagesForm(Form $form): Form
@@ -110,7 +114,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     {
         return $form->schema([
             Forms\Components\Section::make('Proposer une UV')
-                ->description('Si vous ne trouvez pas l’UV que vous cherchez, vous pouvez demander à ' . 
+                ->description("Si vous ne trouvez pas l'UV que vous cherchez, vous pouvez demander à " . 
                     User::where('role', Roles::EmployedPrivilegedTutor->value)
                     ->get()
                     ->map(fn ($user) => "{$user->firstName} {$user->lastName}")
@@ -127,6 +131,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
                         ->searchable()
                         ->multiple()
                         ->reactive()
+                        ->afterStateUpdated(fn () => $this->updateCanSaveUv())
                         ->requiredWithout(['code', 'intitule']),
                 ]),
         
@@ -134,19 +139,36 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
                 ->description('Créez une nouvelle UV avec son code et son intitulé')
                 ->schema([
                     Forms\Components\TextInput::make('code')
-                    ->label('Code de l’UV')
+                    ->label("Code de l'UV")
                     ->maxLength(10)
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->updateCanSaveUv())
                     ->requiredWithout('selected_codes'),
             
                     Forms\Components\TextInput::make('intitule')
-                    ->label('Intitulé de l’UV')
+                    ->label("Intitulé de l'UV")
                     ->maxLength(255)
+                    ->reactive()
+                    ->afterStateUpdated(fn () => $this->updateCanSaveUv())
                     ->requiredWithout('selected_codes'),
                 ])
                 ->columns(2)
                 ->visible(fn () => Auth::user()->role === Roles::EmployedPrivilegedTutor->value),
         ])->statePath('');
-    }               
+    }
+    
+    public function updateCanSaveUv(): void
+    {
+        $this->canSaveUv = (!empty($this->selected_codes) && is_array($this->selected_codes)) || 
+                          (!empty($this->code) && !empty($this->intitule));
+    }
+    
+    public function updated($property): void
+    {
+        if (in_array($property, ['selected_codes', 'code', 'intitule'])) {
+            $this->updateCanSaveUv();
+        }
+    }            
 
     public function createUv()
     {
@@ -177,6 +199,7 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
 
         $this->reset(['selected_codes', 'code', 'intitule']);
         $this->form->fill();
+        $this->updateCanSaveUv();
     }    
 
     public function table(Table $table): Table

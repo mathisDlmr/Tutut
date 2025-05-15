@@ -29,7 +29,6 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     public $content;
     public $roles = [];
     
-    // Propriétés réactives pour l'état des boutons
     public $canSendEmailFlag = false;
     public $canPreviewEmailFlag = false;
     public $canSaveTemplateFlag = false;
