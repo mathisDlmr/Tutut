@@ -285,10 +285,12 @@ class InscriptionCreneauResource extends Resource
                             ->maxItems(3),
                     ])                    
                     ->visible(function (Creneaux $record) use ($userId) {
-                        $max = $record->tutor2_id ? 15 : 6;
+                        $max = ($record->tutor1_id && $record->tutor2_id) ? 15 : 6;
                         return !$record->inscriptions->contains('tutee_id', $userId)
                             && $record->inscriptions_count < $max
                             && Auth::user()->role !== Roles::Administrator->value
+                            && Auth::id() !== $record->tutor1_id
+                            && Auth::id() !== $record->tutor2_id
                             && $record->end > Carbon::now();
                     })
                     ->action(function (array $data, Creneaux $record) use ($userId) {
