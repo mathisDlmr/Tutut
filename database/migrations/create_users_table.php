@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('lastName', 100)->nullable();
             $table->enum('role', $roles)->default('tutee');
             $table->json('languages')->nullable();
+            $table->timestamp('rgpd_accepted_at')->nullable();
             $table->timestamps();
         });
     }

@@ -35,6 +35,7 @@ use Filament\Pages\Dashboard;
 use App\Filament\Widgets\AdminWidget;
 use App\Filament\Widgets\TuteeCreneauxWidget;
 use App\Filament\Widgets\TutorCreneauxTableWidget;
+use App\Http\Middleware\EnsureRgpdAccepted;
 use App\Models\Semestre;
 
 class AdminPanelProvider extends PanelProvider
@@ -95,6 +96,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                EnsureRgpdAccepted::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

@@ -12,7 +12,7 @@ class User extends Authenticatable implements HasName
 {
     use HasFactory;
 
-    protected $fillable = ['email', 'firstName', 'lastName', 'role', 'languages'];
+    protected $fillable = ['email', 'firstName', 'lastName', 'role', 'languages', 'rgpd_accepted_at'];
 
     protected $casts = [
         'languages' => 'array',
