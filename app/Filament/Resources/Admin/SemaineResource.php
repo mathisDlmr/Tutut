@@ -133,6 +133,7 @@ class SemaineResource extends Resource
                     ->label('Vacances')
                     ->formatStateUsing(fn (bool $state) => $state ? 'Oui' : 'Non'),
             ])
+            ->query(Semaine::query()->where('fk_semestre', Semestre::where('is_active', true)->first()->code))
             ->filters([
                 Tables\Filters\Filter::make('future')
                     ->label('Semaines futures')
