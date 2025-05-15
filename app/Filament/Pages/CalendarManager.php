@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\Roles;
 use App\Models\CalendarOverride;
 use App\Models\Semestre;
 use Carbon\Carbon;
@@ -11,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
 
 class CalendarManager extends Page
 {
@@ -30,6 +32,13 @@ class CalendarManager extends Page
     public bool $isHoliday = false;
     public ?string $semestreStartMonth = null;
     public ?string $semestreEndMonth = null;
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user && (Auth::user()->role === Roles::Administrator->value ||
+               Auth::user()->role === Roles::EmployedPrivilegedTutor->value);
+    }   
 
     protected function getFormSchema(): array 
     {
