@@ -28,10 +28,16 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     public $mailTitle;
     public $content;
     public $roles = [];
+    
+    // Propriétés réactives pour l'état des boutons
+    public $canSendEmailFlag = false;
+    public $canPreviewEmailFlag = false;
+    public $canSaveTemplateFlag = false;
 
     public function mount()
     {
         $this->templateOptions = $this->getTemplateOptions();
+        $this->updateButtonStates();
     }    
 
     public static function canAccess(): bool
@@ -54,6 +60,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
                             $data = json_decode(Storage::get("email-templates/{$state}.json"), true);
                             $set('mailTitle', $data['title'] ?? '');
                             $set('content', $data['content'] ?? '');
+                            // Mettre à jour l'état des boutons après le chargement du template
+                            $this->updateButtonStates();
                         }
                 }),            
             ]),
@@ -73,22 +81,44 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
                     ])
                     ->toArray()
                 )
+                ->reactive()
+                ->afterStateUpdated(fn () => $this->updateButtonStates())
                 ->required(),
     
             TextInput::make('mailTitle')
                 ->label('Sujet')
+                ->reactive()
+                ->afterStateUpdated(fn () => $this->updateButtonStates())
                 ->required(),
     
             RichEditor::make('content')
                 ->label('Contenu')
+                ->reactive()
+                ->afterStateUpdated(fn () => $this->updateButtonStates())
                 ->required(),
     
             TextInput::make('templateName')
                 ->label('Nom du template')
                 ->placeholder('Nom pour enregistrer un template')
-                ->helperText('Requis uniquement pour l’enregistrement'),
+                ->reactive()
+                ->afterStateUpdated(fn () => $this->updateButtonStates())
+                ->helperText("Requis uniquement pour l'enregistrement"),
         ];
     }    
+
+    // Méthode pour mettre à jour l'état des boutons
+    public function updateButtonStates()
+    {
+        $this->canSendEmailFlag = !empty($this->mailTitle) && !empty($this->content) && !empty($this->roles);
+        $this->canPreviewEmailFlag = !empty($this->mailTitle) && !empty($this->content);
+        $this->canSaveTemplateFlag = !empty($this->templateName) && !empty($this->mailTitle) && !empty($this->content);
+    }
+
+    // S'assurer que les changements de formulaire déclenchent les mises à jour
+    public function updated($property)
+    {
+        $this->updateButtonStates();
+    }
 
     public function previewEmail()
     {
@@ -150,6 +180,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
 
         $this->templateName = null;
         $this->templateOptions = $this->getTemplateOptions();
+        $this->updateButtonStates();
     }
 
     public function deleteTemplate()
@@ -164,6 +195,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
                 ->send();
 
             $this->template = null;
+            $this->templateOptions = $this->getTemplateOptions();
+            $this->updateButtonStates();
         }
     }
 
