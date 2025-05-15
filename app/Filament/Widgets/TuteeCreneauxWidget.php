@@ -26,13 +26,17 @@ class TuteeCreneauxWidget extends BaseWidget
 
         return Creneaux::query()
             ->whereHas('inscriptions', fn($query) => $query->where('tutee_id', $user->id))
-            ->where('start','>=',now())
+            ->where('end', '>=', now())
+            ->where(function ($query) use ($user) {
+                $query->whereNotNull('tutor1_id')
+                    ->orWhereNotNull('tutor2_id');
+                })
             ->with([
-                'salle',
-                'semaine',
-                'tutor1',
-                'tutor2',
-                'inscriptions' => fn($q) => $q->where('tutee_id', $user->id),
+            'salle',
+            'semaine',
+            'tutor1',
+            'tutor2',
+            'inscriptions' => fn($q) => $q->where('tutee_id', $user->id),
             ])
             ->orderBy('start');
     }
