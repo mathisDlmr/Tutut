@@ -148,18 +148,6 @@ class SemaineResource extends Resource
                     ->requiresConfirmation()
                     ->color('success')
                     ->icon('heroicon-o-plus-circle'),
-                Action::make('ouvrirCreneaux')
-                    ->label('Ouvrir créneaux')
-                    ->icon('heroicon-o-lock-open')
-                    ->requiresConfirmation()
-                    ->action(function (Semaine $record) {
-                        Creneaux::query()->update(['open' => false]);
-                        Creneaux::where('fk_semaine', $record->id)->update(['open' => true]);
-                        Notification::make()
-                            ->title("Tous les créneaux de la semaine {$record->numero} sont maintenant ouverts.")
-                            ->success()
-                            ->send();
-                    }),
                 Action::make('vacances')
                     ->label('Vacances')
                     ->icon('heroicon-o-sun')

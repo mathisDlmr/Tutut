@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Tutor;
 
 use App\Filament\Resources\Tutor\CreneauResource\Pages;
 use App\Models\Creneaux;
+use App\Models\Semaine;
 use Filament\Resources\Resource;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -11,8 +12,9 @@ use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use App\Enums\Roles;
-use Filament\Forms\Components\Split;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class CreneauResource extends Resource
 {
@@ -41,22 +43,92 @@ class CreneauResource extends Resource
     public function getHoraireCompletAttribute(): string
     {
         return $this->start->format('H:i') . ' - ' . $this->end->format('H:i');
-    }       
+    }
+
+    protected static function getRegistrationSettings(): array
+    {
+        $settingsPath = Storage::path('settings.json');
+        if (file_exists($settingsPath)) {
+            $settings = json_decode(file_get_contents($settingsPath), true);
+            return $settings;
+        }
+        
+        return [   // Valeurs par défaut si le fichier n'existe pas
+            'employedTutorRegistrationDay' => 'monday',
+            'employedTutorRegistrationTime' => '16:00',
+            'tutorRegistrationDay' => 'friday',
+            'tutorRegistrationTime' => '16:00',
+        ];
+    }
+    
+    protected static function shouldShowNextWeek(): bool
+    {
+        $user = Auth::user();
+        $settings = self::getRegistrationSettings();
+        $now = Carbon::now();
+        
+        if ($user->role === Roles::Tutor->value) {
+            $day = $settings['tutorRegistrationDay'] ?? 'friday';
+            $time = $settings['tutorRegistrationTime'] ?? '16:00';
+        } else {
+            $day = $settings['employedTutorRegistrationDay'] ?? 'monday';
+            $time = $settings['employedTutorRegistrationTime'] ?? '16:00';
+        }
+        
+        $dayMap = [
+            'sunday' => 0,
+            'monday' => 1,
+            'tuesday' => 2,
+            'wednesday' => 3,
+            'thursday' => 4,
+            'friday' => 5,
+            'saturday' => 6,
+        ];
+        
+        $dayNumber = $dayMap[strtolower($day)] ?? 1;
+        
+        $registrationDate = Carbon::now()->startOfWeek()->addDays($dayNumber);
+        
+        $timeParts = explode(':', $time);
+        $registrationDate->hour(intval($timeParts[0] ?? 0));
+        $registrationDate->minute(intval($timeParts[1] ?? 0));
+        $registrationDate->second(0);
+        
+        // Si on est après la date/heure d'inscription en fct du role, montrer la semaine suivante aussi
+        return $now->greaterThanOrEqualTo($registrationDate);
+    }
 
     public static function table(Table $table): Table
     {
         $userId = Auth::id();
+        $showNextWeek = self::shouldShowNextWeek();
+        
+        $query = Creneaux::query()
+            ->with([
+                'tutor1.proposedUvs:code,code', 
+                'tutor2.proposedUvs:code,code',
+                'semaine'
+            ])
+            ->orderBy('start');
+        
+        $currentWeek = Semaine::where('date_debut', '<=', Carbon::now())
+            ->where('date_fin', '>=', Carbon::now())
+            ->first();
+        
+        if ($currentWeek) {
+            $nextWeek = Semaine::where('numero', $currentWeek->numero + 1)
+                ->where('fk_semestre', $currentWeek->fk_semestre)
+                ->first();
+            
+            if ($showNextWeek && $nextWeek) {
+                $query->whereIn('fk_semaine', [$currentWeek->id, $nextWeek->id]);
+            } else {
+                $query->where('fk_semaine', $currentWeek->id);
+            }
+        }
     
         return $table
-            ->query(
-                Creneaux::query()
-                    ->with([
-                        'tutor1.proposedUvs:code,code', 
-                        'tutor2.proposedUvs:code,code'
-                    ])
-                    ->where('open', true)
-                    ->orderBy('start')
-            )
+            ->query($query)
             ->groups([
                 Tables\Grouping\Group::make('day_and_time')
                     ->label('Jour et horaire')
@@ -73,11 +145,18 @@ class CreneauResource extends Resource
             ->defaultGroup('day_and_time')
             ->columns([
                 Tables\Columns\Layout\Stack::make([
-                    TextColumn::make('fk_salle')
-                        ->label('Salle')
-                        ->icon('heroicon-o-map-pin')
-                        ->color('gray'),
-    
+                    Tables\Columns\Layout\Split::make([
+                        TextColumn::make('fk_salle')
+                            ->label('Salle')
+                            ->icon('heroicon-o-map-pin')
+                            ->color('gray'),
+        
+                        TextColumn::make('semaine.numero')
+                            ->label('Semaine')
+                            ->formatStateUsing(fn($state)=>'Semaine '.$state)
+                            ->icon('heroicon-o-calendar')
+                            ->color('gray'),
+                    ]),    
                     Tables\Columns\Layout\Split::make([
                         TextColumn::make('tutor1.firstName')
                             ->label('Tuteur 1')
@@ -108,7 +187,7 @@ class CreneauResource extends Resource
                             return $uvs->unique()->sort()->implode(', ') ?: '—';
                         })
                         ->icon('heroicon-o-academic-cap')
-                        ->color('primary'),                   
+                        ->color('primary'),
                 ])
             ])
             ->contentGrid([
@@ -123,7 +202,7 @@ class CreneauResource extends Resource
                     ->color(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
-                        ($record->tutor1_id === null) || $record->tutor1_id === $userId
+                        ($record->tutor1_id === null && $record->tutor2_id !== $userId) || $record->tutor1_id === $userId
                     )
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor1_id === $userId) {
@@ -138,7 +217,7 @@ class CreneauResource extends Resource
                     ->color(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
-                        ($record->tutor2_id === null) || $record->tutor2_id === $userId
+                        ($record->tutor2_id === null && $record->tutor1_id !== $userId) || $record->tutor2_id === $userId
                     )
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor2_id === $userId) {
@@ -147,7 +226,7 @@ class CreneauResource extends Resource
                             $record->update(['tutor2_id' => $userId]);
                         }
                     }),
-            ])            
+            ]) 
             ->paginated(false)
             ->recordUrl(null);
     }          
@@ -159,4 +238,3 @@ class CreneauResource extends Resource
         ];
     }
 }
-

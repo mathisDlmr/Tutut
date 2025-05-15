@@ -19,7 +19,6 @@ return new class extends Migration
             $table->boolean('tutor2_compted')->nullable();
             $table->foreignId('fk_semaine')->constrained('semaines', 'id')->onDelete('cascade');
             $table->foreignId('fk_salle')->constrained('salles', 'numero');
-            $table->boolean('open')->default(false);
             $table->dateTime('start');
             $table->dateTime('end');
             $table->timestamps();
