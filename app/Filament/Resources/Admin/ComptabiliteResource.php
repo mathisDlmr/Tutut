@@ -30,7 +30,21 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Illuminate\Database\Eloquent\Collection;
 
+/**
+ * Resource de gestion de la comptabilité
+ * 
+ * Cette ressource permet aux administrateurs de gérer la comptabilisation
+ * des heures effectuées par les tuteurs employés.
+ * Fonctionnalités :
+ * - Affichage des heures par tuteur et par mois
+ * - Filtrage par mois ou par statut de validation
+ * - Visualisation détaillée des heures par semaine
+ * - Ajout manuel d'heures supplémentaires
+ * - Validation des heures pour la facturation
+ * - Ajout de commentaires pour le BVE (Bureau de la Vie Étudiante)
+ */
 class ComptabiliteResource extends Resource
 {
     protected static ?string $model = Comptabilite::class;
@@ -39,15 +53,35 @@ class ComptabiliteResource extends Resource
     protected static ?string $pluralModelLabel = 'Comptabilité';
     protected static ?string $navigationGroup = 'Administration';
 
+    /**
+     * Stocke le mois filtré sélectionné actuellement
+     */
     protected static ?string $selectedMonth = null;
+    
+    /**
+     * Indique si on doit montrer uniquement les enregistrements non validés
+     */
     protected static bool $showOnlyNonValides = false;
 
+    /**
+     * Vérifie si l'utilisateur peut accéder à cette ressource
+     * 
+     * Seuls les administrateurs ont accès à la comptabilité
+     * 
+     * @return bool Vrai si l'utilisateur a les droits d'accès
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user();
         return $user && Auth::user()->role === Roles::Administrator->value;
     }  
 
+    /**
+     * Définit le formulaire de base de la comptabilité
+     * 
+     * @param Form $form Instance du formulaire
+     * @return Form Formulaire configuré
+     */
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -60,12 +94,35 @@ class ComptabiliteResource extends Resource
         ]);
     }
 
-    // On groupe par le mois du samedi (dernier jour où on peut faire des heures)
+    /**
+     * Extrait la clé du mois à partir d'une semaine
+     * 
+     * On utilise la date du samedi (dernier jour de la semaine)
+     * comme référence pour déterminer le mois associé à une semaine.
+     * Le format retourné est "AAAA-MM" (ex: "2023-09")
+     * 
+     * @param Semaine $semaine La semaine dont on veut extraire le mois
+     * @return string La clé du mois au format "AAAA-MM"
+     */
     protected static function getMonthKeyFromSemaine(Semaine $semaine): string
     {
         return Carbon::parse($semaine->date_debut)->next(Carbon::SATURDAY)->format('Y-m');
     }   
 
+    /**
+     * Définit la table d'affichage de la comptabilité
+     * 
+     * Cette méthode complexe:
+     * - Vérifie qu'un semestre actif existe
+     * - Récupère tous les tuteurs employés ayant des heures
+     * - Organise les données par mois
+     * - Configure les filtres pour le mois et les validations
+     * - Affiche un résumé des heures par tuteur
+     * - Propose des actions pour modifier et valider les heures
+     * 
+     * @param Table $table Instance de la table
+     * @return Table Table configurée
+     */
     public static function table(Table $table): Table
     {
         $semestreActif = Semestre::where('is_active', true)->first();
@@ -78,10 +135,12 @@ class ComptabiliteResource extends Resource
                 ]);
         }
     
+        // Récupère toutes les semaines du semestre actif
         $semaines = Semaine::where('fk_semestre', $semestreActif->code)
             ->orderBy('numero')
             ->get();
     
+        // Récupère tous les tuteurs employés ayant des heures
         $employedTutorIds = DB::table('comptabilite')
             ->whereIn('fk_semaine', $semaines->pluck('id'))
             ->pluck('fk_user')
@@ -95,21 +154,25 @@ class ComptabiliteResource extends Resource
             ->orderBy('lastName')
             ->orderBy('firstName');
     
+        // Groupe les semaines par mois
         $months = $semaines->groupBy(function ($semaine) {
             return self::getMonthKeyFromSemaine($semaine);
         });
 
+        // Prépare les options de filtrage par mois
         $monthOptions = [];
         foreach ($months as $yearMonth => $semainesInMonth) {
             $monthLabel = ucfirst(Carbon::parse($yearMonth . '-01')->translatedFormat('F Y'));
             $monthOptions[$yearMonth] = $monthLabel;
         }
     
+        // Détermine le mois par défaut (mois courant ou premier mois disponible)
         $defaultMonth = Carbon::now()->format('Y-m');
         if (!array_key_exists($defaultMonth, $monthOptions)) {
             $defaultMonth = array_key_first($monthOptions); 
         }
     
+        // Crée les groupes par mois pour l'affichage
         $monthGroups = [];
         foreach ($months as $yearMonth => $semainesInMonth) {
             $monthLabel = ucfirst(Carbon::parse($yearMonth . '-01')->translatedFormat('F Y'));
@@ -548,6 +611,13 @@ class ComptabiliteResource extends Resource
 
     /**
      * Détermine les mois auxquels l'utilisateur appartient en fonction de ses comptabilités
+     * 
+     * Cette méthode filtre les comptabilités d'un utilisateur pour identifier les mois
+     * où l'utilisateur a des heures enregistrées.
+     * 
+     * @param User $user L'utilisateur dont on veut récupérer les mois d'activité
+     * @param Collection $semaines Collection des semaines disponibles
+     * @return array Liste des mois au format "AAAA-MM"
      */
     protected static function getUserMonths(User $user, Collection $semaines)
     {
@@ -572,6 +642,14 @@ class ComptabiliteResource extends Resource
         return array_unique($months);
     }
 
+    /**
+     * Définit les pages associées à cette ressource
+     * 
+     * La comptabilité ne comprend qu'une page de liste,
+     * qui intègre toutes les fonctionnalités de gestion.
+     * 
+     * @return array Liste des pages et leurs routes
+     */
     public static function getPages(): array
     {
         return [

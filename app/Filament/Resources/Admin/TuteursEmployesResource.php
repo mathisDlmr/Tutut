@@ -15,6 +15,18 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Tables\Filters\MultiSelectFilter;
 
+/**
+ * Resource de gestion des tuteurs employés
+ * 
+ * Cette ressource permet aux administrateurs de gérer les tuteurs
+ * ayant un statut d'employé ou privilégié dans le système.
+ * Fonctionnalités :
+ * - Ajout de nouveaux tuteurs par email
+ * - Attribution des rôles (administrateur, tuteur employé, tuteur privilégié)
+ * - Filtrage par rôle
+ * - Promotion/rétrogradation des tuteurs employés
+ * - Suppression de tuteurs (rétrogradation au statut de tutoré)
+ */
 class TuteursEmployesResource extends Resource
 {
     protected static ?string $model = User::class;

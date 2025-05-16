@@ -9,11 +9,27 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Page de création/modification de la comptabilité pour les tuteurs
+ * 
+ * Cette page permet aux tuteurs employés de :
+ * - Marquer les créneaux comme comptabilisés ou non
+ * - Ajouter des heures supplémentaires avec justification
+ * - Sauvegarder l'ensemble des modifications pour la validation
+ */
 class CreateTutorComptabilite extends CreateRecord
 {
     protected static string $resource = ComptabiliteTutorResource::class;
 
-
+    /**
+     * Définit les actions du formulaire en bas de page
+     * 
+     * Ajoute deux boutons :
+     * - Annuler : pour revenir à la liste sans sauvegarder
+     * - Enregistrer : pour confirmer les heures et sauvegarder
+     * 
+     * @return array Tableau des actions du formulaire
+     */
     protected function getFormActions(): array
     {
         return [
@@ -29,6 +45,15 @@ class CreateTutorComptabilite extends CreateRecord
         ];
     }
 
+    /**
+     * Définit les actions disponibles dans l'en-tête de la page
+     * 
+     * Ajoute deux boutons identiques à ceux du bas du formulaire :
+     * - Annuler : pour revenir à la liste sans sauvegarder
+     * - Enregistrer : pour confirmer les heures et sauvegarder
+     * 
+     * @return array Tableau des actions d'en-tête
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -44,17 +69,40 @@ class CreateTutorComptabilite extends CreateRecord
         ];
     }
 
+    /**
+     * Obtient le titre de la page
+     * 
+     * @return string Le titre traduit de la page
+     */
     public function getTitle(): string
     {
         return __('resources.comptabilite_tutor.actions.confirm_hours');
     }
 
+    /**
+     * Obtient le sous-titre de la page
+     * 
+     * Affiche un rappel concernant la sauvegarde des données
+     * 
+     * @return string|Htmlable|null Le sous-titre traduit de la page
+     */
     public function getSubheading(): string|Htmlable|null
     {
         $user = Auth::user();
         return __('resources.comptabilite_tutor.subheadings.save_reminder');
     }
 
+    /**
+     * Active ou désactive la comptabilisation d'un créneau
+     * 
+     * Cette méthode permet à un tuteur de marquer un créneau comme comptabilisé
+     * ou non, en fonction de son rôle dans ce créneau (tuteur 1 ou 2).
+     * Elle est appelée depuis la vue via des boutons de bascule.
+     * 
+     * @param int $creneauId L'identifiant du créneau à modifier
+     * @param bool $value La valeur à définir (true = comptabilisé, false = non comptabilisé)
+     * @throws \Illuminate\Auth\Access\AuthorizationException Si l'utilisateur n'est pas autorisé
+     */
     public function toggleCreneauCompted($creneauId, $value)
     {
         $user = Auth::user();
@@ -71,6 +119,17 @@ class CreateTutorComptabilite extends CreateRecord
         $creneau->save();    
     }     
 
+    /**
+     * Crée ou met à jour les enregistrements de comptabilité
+     * 
+     * Cette méthode est appelée lors de la soumission du formulaire et :
+     * - Calcule le nombre total d'heures pour chaque semaine
+     * - Enregistre ou met à jour les enregistrements de comptabilité
+     * - Gère les heures supplémentaires avec leurs justifications
+     * - Affiche une notification de confirmation
+     * 
+     * @param bool $another Indique si une autre création doit être lancée après celle-ci (non utilisé)
+     */
     public function create(bool $another = false): void
     {
         $user = Auth::user();

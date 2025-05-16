@@ -7,10 +7,23 @@ use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use App\Models\Salle;
 
+/**
+ * Page d'édition d'une salle
+ * 
+ * Cette page permet de modifier les propriétés d'une salle existante:
+ * - Son numéro
+ * - Ses disponibilités par jour de la semaine
+ * - Ses horaires spécifiques pour les périodes d'examens (médians et finaux)
+ */
 class EditSalle extends EditRecord
 {
     protected static string $resource = SalleResource::class;
 
+    /**
+     * Définit les actions disponibles dans l'en-tête de la page d'édition
+     * 
+     * @return array Liste des actions disponibles (ici uniquement l'action de suppression)
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -18,6 +31,14 @@ class EditSalle extends EditRecord
         ];
     } 
 
+    /**
+     * Analyse et normalise un créneau horaire au format texte
+     * 
+     * Convertit des formats comme "12h30-14h" en heures normalisées ["12:30:00", "14:00:00"]
+     * 
+     * @param string $creneau Le créneau au format texte (ex: "12h30-14h")
+     * @return array Tableau contenant les heures de début et fin normalisées
+     */
     private function parseCreneau($creneau): array
     {
         [$debut, $fin] = explode('-', $creneau);
@@ -43,6 +64,17 @@ class EditSalle extends EditRecord
         return [$normalizeTime($debut), $normalizeTime($fin)];
     }    
 
+    /**
+     * Prépare les données du formulaire avant qu'il ne soit rempli
+     * 
+     * Cette méthode:
+     * - Charge les disponibilités existantes de la salle
+     * - Formate les créneaux horaires standards pour les cases à cocher
+     * - Prépare spécifiquement les champs pour les périodes d'examens (médians/finaux)
+     * 
+     * @param array $data Les données initiales
+     * @return array Les données modifiées pour le formulaire
+     */
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $this->record->load('disponibilites');
@@ -72,6 +104,14 @@ class EditSalle extends EditRecord
         return $data;
     }    
 
+    /**
+     * Exécuté après la sauvegarde des modifications
+     * 
+     * Cette méthode:
+     * - Supprime toutes les disponibilités existantes
+     * - Enregistre les nouvelles disponibilités standards (jours normaux)
+     * - Enregistre les disponibilités spéciales pour les périodes d'examens
+     */
     protected function afterSave(): void
     {
         $this->record->disponibilites()->delete();

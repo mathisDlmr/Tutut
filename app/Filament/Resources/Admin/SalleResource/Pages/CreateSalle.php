@@ -6,10 +6,26 @@ use App\Filament\Resources\Admin\SalleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
+/**
+ * Page de création d'une salle
+ * 
+ * Cette page permet de créer une nouvelle salle et de configurer:
+ * - Son numéro
+ * - Ses disponibilités par jour de la semaine (via cases à cocher)
+ * - Ses horaires spécifiques pour les périodes d'examens
+ */
 class CreateSalle extends CreateRecord
 {
     protected static string $resource = SalleResource::class;
 
+    /**
+     * Analyse et normalise un créneau horaire au format texte
+     * 
+     * Convertit des formats comme "12h30-14h" en heures normalisées ["12:30:00", "14:00:00"]
+     * 
+     * @param string $creneau Le créneau au format texte (ex: "12h30-14h")
+     * @return array Tableau contenant les heures de début et fin normalisées
+     */
     private function parseCreneau($creneau): array
     {
         [$debut, $fin] = explode('-', $creneau);
@@ -34,6 +50,15 @@ class CreateSalle extends CreateRecord
         return [$normalizeTime($debut), $normalizeTime($fin)];
     }    
 
+    /**
+     * Prépare les données du formulaire avant qu'il ne soit rempli
+     * 
+     * Cette méthode transforme les disponibilités enregistrées en base de données
+     * en structure adaptée pour l'affichage dans le formulaire.
+     * 
+     * @param array $data Les données initiales
+     * @return array Les données modifiées pour le formulaire
+     */
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $this->record->load('disponibilites');
@@ -51,6 +76,13 @@ class CreateSalle extends CreateRecord
         return $data;
     }
 
+    /**
+     * Exécuté après la création de la salle
+     * 
+     * Enregistre les disponibilités configurées dans le formulaire:
+     * - Traite les créneaux standards (cases à cocher) pour les jours normaux
+     * - Traite séparément les créneaux pour les périodes d'examens (médians et finaux)
+     */
     protected function afterCreate(): void
     {
         $this->record->disponibilites()->delete();

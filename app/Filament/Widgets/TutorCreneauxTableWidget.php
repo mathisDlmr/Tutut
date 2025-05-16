@@ -10,6 +10,20 @@ use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Widget de visualisation des créneaux pour un tuteur
+ * 
+ * Ce widget affiche les créneaux à venir assignés au tuteur connecté.
+ * Informations affichées pour chaque créneau :
+ * - Date et jour
+ * - Horaire
+ * - Salle
+ * - Tuteurs assignés (co-tuteurs)
+ * - Nombre d'inscrits
+ * - UVs demandées par les tutorés
+ * 
+ * Les créneaux sont regroupés par jour et horaire pour une meilleure organisation.
+ */
 class TutorCreneauxTableWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';

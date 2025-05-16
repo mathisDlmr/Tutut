@@ -14,27 +14,62 @@ use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Resource de gestion des candidatures de tuteurs
+ * 
+ * Cette ressource permet aux tuteurs employés et administrateurs d'examiner
+ * et de traiter les demandes des tutorés souhaitant devenir tuteurs.
+ * Fonctionnalités :
+ * - Liste des candidatures en attente avec filtrage par semestre
+ * - Affichage détaillé de chaque candidature (infos personnelles, UVs, motivation)
+ * - Acceptation des candidatures (promotion au rôle de tuteur)
+ * - Rejet des candidatures avec marquage approprié
+ * - Recherche par nom ou prénom du candidat
+ */
 class TutorApplicationResource extends Resource
 {
     protected static ?string $model = BecomeTutor::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static ?int $navigationSort = 6;
 
+    /**
+     * Obtient le label du modèle pour la ressource
+     * 
+     * @return string Le label traduit pour le modèle
+     */
     public static function getModelLabel(): string
     {
         return __('resources.tutor_application.label');
     }
 
+    /**
+     * Obtient le label pluriel du modèle pour la ressource
+     * 
+     * @return string Le label pluriel traduit pour le modèle
+     */
     public static function getPluralModelLabel(): string
     {
         return __('resources.tutor_application.plural_label');
     }
 
+    /**
+     * Obtient le groupe de navigation pour la ressource
+     * 
+     * @return string Le groupe de navigation traduit
+     */
     public static function getNavigationGroup(): string
     {
         return __('resources.tutor_application.navigation_group');
     }
 
+    /**
+     * Vérifie si l'utilisateur peut accéder à cette ressource
+     * 
+     * Seuls les tuteurs employés et les administrateurs peuvent voir
+     * et traiter les candidatures
+     * 
+     * @return bool Vrai si l'utilisateur a le droit d'accéder, faux sinon
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user();
@@ -43,6 +78,17 @@ class TutorApplicationResource extends Resource
             || Auth::user()->role === Roles::Administrator->value);
     }   
     
+    /**
+     * Configure la table d'affichage des candidatures
+     * 
+     * Cette méthode définit :
+     * - Les colonnes affichant les informations des candidats
+     * - Les filtres pour trier les candidatures
+     * - Les actions pour voir, accepter ou rejeter une candidature
+     * 
+     * @param Table $table La table à configurer
+     * @return Table La table configurée
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -173,6 +219,13 @@ class TutorApplicationResource extends Resource
             ]);
     }
     
+    /**
+     * Définit les relations du modèle
+     * 
+     * Aucune relation spécifique n'est définie pour cette ressource
+     * 
+     * @return array Tableau vide car pas de relations particulières
+     */
     public static function getRelations(): array
     {
         return [
@@ -180,6 +233,14 @@ class TutorApplicationResource extends Resource
         ];
     }
     
+    /**
+     * Définit les pages disponibles pour cette ressource
+     * 
+     * Cette ressource ne contient qu'une page d'index qui liste
+     * les candidatures de tuteurs.
+     * 
+     * @return array Tableau associatif des pages
+     */
     public static function getPages(): array
     {
         return [

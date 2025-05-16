@@ -13,10 +13,22 @@ use App\Enums\Roles;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+/**
+ * Page de liste de la comptabilité
+ * 
+ * Cette page affiche la liste des tuteurs avec leurs heures,
+ * permet de modifier et valider les heures, et d'exporter
+ * les données au format CSV.
+ */
 class ListComptabilite extends ListRecords
 {
     protected static string $resource = ComptabiliteResource::class;
 
+    /**
+     * Définit les actions disponibles dans l'en-tête de la page
+     * 
+     * @return array Actions disponibles (ici uniquement l'export CSV)
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -24,6 +36,7 @@ class ListComptabilite extends ListRecords
                 ->label('Exporter CSV')
                 ->icon('heroicon-o-document-arrow-down')
                 ->action(function () {
+                    // Récupère le semestre actif
                     $semestreActif = Semestre::where('is_active', true)->first();
                     
                     if (!$semestreActif) {
@@ -31,10 +44,12 @@ class ListComptabilite extends ListRecords
                         return;
                     }
                     
+                    // Récupère toutes les semaines du semestre
                     $semaines = Semaine::where('fk_semestre', $semestreActif->code)
                         ->orderBy('numero')
                         ->get();
                     
+                    // Récupère tous les tuteurs employés ayant des heures
                     $employedTutorIds = DB::table('comptabilite')
                         ->whereIn('fk_semaine', $semaines->pluck('numero'))
                         ->pluck('fk_user')
@@ -54,8 +69,10 @@ class ListComptabilite extends ListRecords
                         ->orderBy('firstName')
                         ->get();
                     
+                    // Préparation des données CSV
                     $csvData = [];
                     
+                    // En-têtes du fichier CSV
                     $header = ['Nom', 'Prénom', 'Email'];
                     foreach ($semaines as $semaine) {
                         $header[] = "Semaine {$semaine->numero}";
@@ -64,6 +81,7 @@ class ListComptabilite extends ListRecords
                     
                     $csvData[] = $header;
                     
+                    // Données pour chaque tuteur
                     foreach ($employedTutors as $tutor) {
                         $row = [
                             $tutor->lastName,
@@ -73,6 +91,7 @@ class ListComptabilite extends ListRecords
                         
                         $total = 0;
                         
+                        // Récupération des heures pour chaque semaine
                         foreach ($semaines as $semaine) {
                             $comptabilite = Comptabilite::where('fk_user', $tutor->id)
                                 ->where('fk_semaine', $semaine->numero)
@@ -88,6 +107,7 @@ class ListComptabilite extends ListRecords
                         $csvData[] = $row;
                     }
                     
+                    // Création du contenu CSV
                     $csvContent = '';
                     foreach ($csvData as $row) {
                         $escapedRow = array_map(function($value) {
@@ -97,9 +117,11 @@ class ListComptabilite extends ListRecords
                         $csvContent .= implode(',', $escapedRow) . "\n";
                     }
                     
+                    // Ajout du BOM UTF-8 pour Excel
                     $csvContent = chr(0xEF) . chr(0xBB) . chr(0xBF) . $csvContent;                    
                     $filename = "comptabilite_tuteurs_{$semestreActif->code}.csv";
                     
+                    // Retourne le fichier en téléchargement
                     return response()->streamDownload(function () use ($csvContent) {
                         echo $csvContent;
                     }, $filename, [

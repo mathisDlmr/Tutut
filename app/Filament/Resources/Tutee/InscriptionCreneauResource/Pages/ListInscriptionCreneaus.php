@@ -12,10 +12,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Page de liste des créneaux disponibles pour inscription
+ * 
+ * Cette page affiche les créneaux de tutorat auxquels les tutorés
+ * peuvent s'inscrire, organisés en onglets par semaine et avec
+ * des règles d'accès basées sur la date d'ouverture des inscriptions.
+ */
 class ListInscriptioncreneaus extends ListRecords
 {
     protected static string $resource = InscriptionCreneauResource::class;
     
+    /**
+     * Définit les actions d'en-tête (vides pour cette ressource)
+     * 
+     * @return array Tableau d'actions
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -23,6 +35,14 @@ class ListInscriptioncreneaus extends ListRecords
         ];
     }
     
+    /**
+     * Récupère les paramètres d'inscription depuis le fichier de configuration
+     * 
+     * Lit les paramètres concernant la date et l'heure d'ouverture des
+     * inscriptions pour les tutorés.
+     * 
+     * @return array Tableau associatif des paramètres d'inscription
+     */
     protected function getRegistrationSettings(): array
     {
         $settingsPath = Storage::path('settings.json');
@@ -37,6 +57,15 @@ class ListInscriptioncreneaus extends ListRecords
         ];
     }
     
+    /**
+     * Détermine si la semaine actuelle et la semaine suivante doivent être affichées
+     * 
+     * Cette méthode vérifie, en fonction des paramètres de configuration,
+     * si la date/heure actuelle permet aux tutorés de voir les créneaux
+     * de la semaine suivante.
+     * 
+     * @return bool Vrai si les semaines actuelle et suivante doivent être affichées
+     */
     protected function shouldShowCurrentAndNextWeek(): bool
     {
         $settings = $this->getRegistrationSettings();
@@ -60,6 +89,18 @@ class ListInscriptioncreneaus extends ListRecords
         }
     }
     
+    /**
+     * Définit les onglets pour la liste des créneaux d'inscription
+     * 
+     * Crée des onglets pour la semaine actuelle et éventuellement la semaine suivante
+     * si la période d'inscription pour celle-ci est ouverte.
+     * Chaque onglet affiche les créneaux d'une semaine spécifique, avec :
+     * - Le numéro de semaine
+     * - Un badge indiquant le nombre de créneaux disponibles
+     * - Filtrage pour n'afficher que les créneaux pertinents (pas terminés, avec tuteurs)
+     * 
+     * @return array Tableau d'onglets configurés
+     */
     public function getTabs(): array
     {
         $userId = Auth::id();

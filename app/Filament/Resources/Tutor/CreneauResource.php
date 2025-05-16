@@ -16,6 +16,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
+/**
+ * Resource de gestion des créneaux pour les tuteurs
+ * 
+ * Cette ressource permet aux tuteurs de consulter et de s'inscrire
+ * aux créneaux disponibles pour dispenser des séances de tutorat.
+ * Fonctionnalités :
+ * - Affichage des créneaux par jour et horaire
+ * - Logique de "shotgun" permettant de réserver des créneaux selon son rôle
+ * - Règles d'accès aux créneaux basées sur le type de tuteur (employé/bénévole)
+ * - Visualisation des informations sur chaque créneau (salle, horaire, semaine)
+ * - Affichage des UVs proposées par les tuteurs déjà inscrits
+ */
 class CreneauResource extends Resource
 {
     protected static ?string $model = Creneaux::class;
@@ -25,26 +37,53 @@ class CreneauResource extends Resource
     protected static ?string $navigationGroup = 'Tutorat';
     protected static ?int $navigationSort = 1;
 
+    /**
+     * Obtient le label de navigation pour la ressource
+     * 
+     * @return string Le label traduit pour la navigation
+     */
     public static function getNavigationLabel(): string
     {
         return __('resources.creneau.navigation_label');
     }
 
+    /**
+     * Obtient le label du modèle pour la ressource
+     * 
+     * @return string Le label traduit pour le modèle
+     */
     public static function getModelLabel(): string
     {
         return __('resources.creneau.label');
     }
 
+    /**
+     * Obtient le label pluriel du modèle pour la ressource
+     * 
+     * @return string Le label pluriel traduit pour le modèle
+     */
     public static function getPluralModelLabel(): string
     {
         return __('resources.creneau.plural_label');
     }
 
+    /**
+     * Obtient le groupe de navigation pour la ressource
+     * 
+     * @return string Le groupe de navigation traduit
+     */
     public static function getNavigationGroup(): string
     {
         return __('resources.common.navigation.tutorat');
     }
 
+    /**
+     * Vérifie si l'utilisateur peut accéder à cette ressource
+     * 
+     * Seuls les tuteurs (employés, privilégiés ou bénévoles) peuvent accéder
+     * 
+     * @return bool Vrai si l'utilisateur a le droit d'accéder, faux sinon
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user();
@@ -53,6 +92,12 @@ class CreneauResource extends Resource
             || Auth::user()->role === Roles::Tutor->value);
     }    
 
+    /**
+     * Définit le schéma de formulaire (vide pour cette ressource)
+     * 
+     * @param Form $form Le formulaire à configurer
+     * @return Form Le formulaire configuré
+     */
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -60,11 +105,24 @@ class CreneauResource extends Resource
         ]);
     }
     
+    /**
+     * Calcule l'attribut d'horaire complet pour un créneau
+     * 
+     * @return string L'horaire formaté (début - fin)
+     */
     public function getHoraireCompletAttribute(): string
     {
         return $this->start->format('H:i') . ' - ' . $this->end->format('H:i');
     }
 
+    /**
+     * Récupère les paramètres de shotgun depuis le fichier de configuration
+     * 
+     * Lit les paramètres de temps pour l'ouverture des inscriptions aux créneaux
+     * selon le type de tuteur (employé ou bénévole)
+     * 
+     * @return array Tableau associatif des paramètres de shotgun
+     */
     protected static function getRegistrationSettings(): array
     {
         $settingsPath = Storage::path('settings.json');
@@ -81,6 +139,14 @@ class CreneauResource extends Resource
         ];
     }
     
+    /**
+     * Détermine si la semaine suivante doit être affichée pour l'inscription
+     * 
+     * Cette méthode vérifie, en fonction du rôle de l'utilisateur, si la date
+     * d'inscription aux créneaux de la semaine suivante est déjà passée.
+     * 
+     * @return bool Vrai si la semaine suivante doit être affichée
+     */
     protected static function shouldShowNextWeek(): bool
     {
         $user = Auth::user();
@@ -118,6 +184,18 @@ class CreneauResource extends Resource
         return $now->greaterThanOrEqualTo($registrationDate);
     }
 
+    /**
+     * Configure la table d'affichage des créneaux
+     * 
+     * Cette méthode définit :
+     * - Les filtres de requête pour afficher les créneaux des semaines appropriées
+     * - L'organisation par groupes (jours/horaires)
+     * - Les colonnes affichant les informations des créneaux
+     * - Les actions permettant aux tuteurs de s'inscrire ou se désinscrire
+     * 
+     * @param Table $table La table à configurer
+     * @return Table La table configurée
+     */
     public static function table(Table $table): Table
     {
         $userId = Auth::id();
@@ -251,6 +329,14 @@ class CreneauResource extends Resource
             ->recordUrl(null);
     }          
 
+    /**
+     * Définit les pages disponibles pour cette ressource
+     * 
+     * Cette ressource ne contient qu'une page d'index qui liste les créneaux
+     * disponibles pour le shotgun.
+     * 
+     * @return array Tableau associatif des pages
+     */
     public static function getPages(): array
     {
         return [

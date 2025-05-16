@@ -11,20 +11,48 @@ use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\Tutee\BecomeTutorResource;
 use Illuminate\Contracts\Support\Htmlable;
 
+/**
+ * Page de création d'une demande pour devenir tuteur
+ * 
+ * Cette page permet aux tutorés de soumettre leur candidature
+ * pour devenir tuteur. Elle gère à la fois la création d'une
+ * nouvelle demande et la mise à jour d'une demande existante.
+ */
 class CreateBecomeTutorRequest extends CreateRecord
 {
     protected static string $resource = BecomeTutorResource::class;
 
+    /**
+     * Obtient le titre de la page
+     * 
+     * @return string|Htmlable Le titre traduit
+     */
     public function getTitle(): string|Htmlable
     {
         return __('resources.become_tutor.title');
     }
     
+    /**
+     * Désactive le bouton de création par défaut
+     * 
+     * Cette méthode permet de personnaliser les actions du formulaire
+     * en utilisant la méthode getFormActions() à la place.
+     * 
+     * @return bool Toujours faux pour masquer le bouton par défaut
+     */
     protected function hasCreateAction(): bool
     {
         return false;
     }
     
+    /**
+     * Définit les actions personnalisées du formulaire
+     * 
+     * Ajoute un bouton de sauvegarde et un bouton de suppression
+     * si une demande existe déjà pour l'utilisateur.
+     * 
+     * @return array Liste des actions du formulaire
+     */
     protected function getFormActions(): array
     {
         return [
@@ -56,6 +84,13 @@ class CreateBecomeTutorRequest extends CreateRecord
         ];
     }
     
+    /**
+     * Initialise la page et remplit les champs si une demande existe déjà
+     * 
+     * Cette méthode est exécutée lorsque la page est chargée.
+     * Elle vérifie si l'utilisateur a déjà une demande en cours
+     * et pré-remplit le formulaire avec ces données.
+     */
     public function mount(): void
     {
         $existingRequest = Auth::user()->becomeTutorRequest;
@@ -73,6 +108,11 @@ class CreateBecomeTutorRequest extends CreateRecord
         }
     }
     
+    /**
+     * Affiche une notification après la création d'une demande
+     * 
+     * Cette méthode est exécutée après la création réussie d'une demande.
+     */
     protected function afterCreate(): void
     {
         Notification::make()
@@ -82,6 +122,17 @@ class CreateBecomeTutorRequest extends CreateRecord
             ->send();
     }
     
+    /**
+     * Transforme les données du formulaire avant la création
+     * 
+     * Cette méthode:
+     * - Convertit les codes UV en objets complets avec intitulés
+     * - Force le statut à "pending" (en attente)
+     * - Ajoute l'ID de l'utilisateur connecté
+     * 
+     * @param array $data Les données du formulaire
+     * @return array Les données transformées
+     */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         if (isset($data['UVs'])) {
@@ -102,6 +153,15 @@ class CreateBecomeTutorRequest extends CreateRecord
         return $data;
     }
     
+    /**
+     * Gère la création d'un enregistrement ou la mise à jour d'une demande existante
+     * 
+     * Cette méthode vérifie si l'utilisateur a déjà soumis une demande.
+     * Si c'est le cas, elle met à jour cette demande au lieu d'en créer une nouvelle.
+     * 
+     * @param array $data Les données du formulaire
+     * @return \Illuminate\Database\Eloquent\Model L'enregistrement créé ou mis à jour
+     */
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
         $existingRequest = BecomeTutor::where('fk_user', Auth::id())->first();

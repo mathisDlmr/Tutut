@@ -21,6 +21,17 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Filament\Tables\Actions\Action as ActionsAction;
 
+/**
+ * Page de paramètres généraux
+ * 
+ * Cette page permet aux administrateurs et tuteurs privilégiés de configurer
+ * les paramètres globaux de l'application.
+ * Fonctionnalités:
+ * - Configuration des horaires d'inscription pour chaque type d'utilisateur
+ * - Paramétrage des délais d'annulation de créneaux
+ * - Gestion du catalogue des UVs (unités de valeur)
+ * - Mise à jour automatique des UVs depuis une API externe
+ */
 class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Contracts\HasForms
 {
     use Tables\Concerns\InteractsWithTable;

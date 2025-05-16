@@ -14,6 +14,17 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Page de gestion du calendrier
+ * 
+ * Cette page permet aux administrateurs et tuteurs privilégiés de gérer le calendrier,
+ * en définissant des exceptions dans le planning (jours fériés, modifications ponctuelles).
+ * Fonctionnalités:
+ * - Visualisation du calendrier par mois
+ * - Possibilité de marquer des jours comme jours fériés
+ * - Possibilité de changer le template de jour (ex: faire suivre un planning de lundi un mardi)
+ * - Navigation entre les mois dans les limites du semestre actif
+ */
 class CalendarManager extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-table-cells';

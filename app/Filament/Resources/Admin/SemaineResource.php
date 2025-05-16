@@ -22,21 +22,48 @@ use Filament\Tables\Actions\Action;
 use App\Filament\Resources\Admin\SemaineResource\Pages;
 use Filament\Notifications\Notification;
 
+/**
+ * Resource de gestion des semaines
+ * 
+ * Cette ressource permet aux administrateurs et tuteurs privilégiés
+ * de gérer les semaines du semestre et les créneaux associés.
+ * Fonctionnalités :
+ * - Création et édition des semaines (numéro, dates)
+ * - Marquage des semaines de vacances
+ * - Génération automatique de créneaux pour chaque semaine
+ * - Création automatique de la semaine suivante
+ * - Filtrage pour afficher uniquement les semaines à venir
+ */
 class SemaineResource extends Resource
 {
     protected static ?string $model = Semaine::class;
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     
+    /**
+     * Définit le label singulier de la ressource
+     * 
+     * @return string Label traduit pour "semaine"
+     */
     public static function getModelLabel(): string
     {
         return __('resources.admin.semaine.label');
     }
     
+    /**
+     * Définit le label pluriel de la ressource
+     * 
+     * @return string Label traduit pour "semaines"
+     */
     public static function getPluralModelLabel(): string
     {
         return __('resources.admin.semaine.plural_label');
     }
     
+    /**
+     * Définit le groupe de navigation dans le menu latéral
+     * 
+     * @return string Groupe "Gestion" traduit
+     */
     public static function getNavigationGroup(): string
     {
         return __('resources.admin.navigation_group.gestion');
@@ -44,6 +71,13 @@ class SemaineResource extends Resource
     
     protected static ?int $navigationSort = 1;
 
+    /**
+     * Vérifie si l'utilisateur peut accéder à cette ressource
+     * 
+     * Seuls les administrateurs et tuteurs privilégiés y ont accès
+     * 
+     * @return bool Vrai si l'utilisateur a les droits d'accès
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user();
@@ -51,6 +85,18 @@ class SemaineResource extends Resource
                Auth::user()->role === Roles::EmployedPrivilegedTutor->value);
     }       
 
+    /**
+     * Définit le formulaire de création/édition d'une semaine
+     * 
+     * Comprend:
+     * - Numéro de semaine
+     * - Semestre associé
+     * - Indicateur de vacances
+     * - Dates de début et fin
+     * 
+     * @param Form $form Instance du formulaire
+     * @return Form Formulaire configuré
+     */
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -86,6 +132,18 @@ class SemaineResource extends Resource
         ]);
     }
 
+    /**
+     * Définit la table d'affichage des semaines
+     * 
+     * Comprend:
+     * - Action spéciale pour créer automatiquement la semaine suivante
+     * - Colonnes (numéro, semestre, dates, statut vacances)
+     * - Filtrage par semaines futures
+     * - Actions (édition, suppression, génération de créneaux, marquer comme vacances)
+     * 
+     * @param Table $table Instance de la table
+     * @return Table Table configurée
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -189,6 +247,20 @@ class SemaineResource extends Resource
             ]);
     }
 
+    /**
+     * Génère automatiquement des créneaux pour une semaine donnée
+     * 
+     * Cette méthode:
+     * - Supprime les créneaux existants pour cette semaine
+     * - Ne fait rien si c'est une semaine de vacances
+     * - Détermine les horaires standards pour chaque jour
+     * - Gère les horaires spéciaux pour les périodes d'examens (médians/finaux)
+     * - Prend en compte les overrides du calendrier (jours fériés, etc.)
+     * - Crée des créneaux pour chaque salle disponible à ces horaires
+     * 
+     * @param Semaine $semaine La semaine pour laquelle générer les créneaux
+     * @return void
+     */
     public static function genererCreneaux(Semaine $semaine): void
     {
         if ($semaine->is_vacances) {
@@ -201,6 +273,7 @@ class SemaineResource extends Resource
     
         Creneaux::where('fk_semaine', $semaine->id)->delete();
     
+        // Définition des horaires standards pour chaque jour
         $horairesStandards = [
             'Lundi' => ['12:30', '18:40', '19:40'],
             'Mardi' => ['12:30', '18:40', '19:40'],
@@ -210,6 +283,7 @@ class SemaineResource extends Resource
             'Samedi' => ['10:30'],
         ];
     
+        // Horaires spéciaux pour les périodes d'examens avec leur durée en minutes
         $horairesSpeciaux = [
             '08:00' => 120,
             '10:00' => 120,
@@ -220,6 +294,7 @@ class SemaineResource extends Resource
             '19:40' => 60,
         ];
     
+        // Mapping des jours français vers anglais pour Carbon
         $joursMap = [
             'Lundi' => 'Monday',
             'Mardi' => 'Tuesday',
@@ -229,6 +304,7 @@ class SemaineResource extends Resource
             'Samedi' => 'Saturday',
         ];
     
+        // Durées standards pour chaque horaire en minutes
         $duréesStandards = [
             '12:30' => 90,
             '18:40' => 60,
@@ -246,9 +322,10 @@ class SemaineResource extends Resource
             $jourIndex = array_search($jour, array_keys($joursMap));
             $dateDuJour = $baseDate->copy()->addDays($jourIndex);
             
+            // Vérifier s'il y a un override pour cette date
             $override = CalendarOverride::where('date', Carbon::parse($dateDuJour))->first();            
             if ($override && $override->is_holiday) {
-                continue;
+                continue; // Jour férié, pas de créneaux
             }
             
             $jourLabel = $jour;
@@ -259,6 +336,7 @@ class SemaineResource extends Resource
             $horairesDuJour = $horairesStandards[$jour] ?? [];
             $durées = $duréesStandards;
     
+            // Déterminer si on est en période d'examen
             if ($semestre) {
                 if (
                     $semestre->debut_medians && $semestre->fin_medians &&
@@ -277,6 +355,7 @@ class SemaineResource extends Resource
                 }
             }
             
+            // Appliquer l'override s'il existe
             if ($override && $override->day_template) {
                 $jourLabel = $override->day_template;
                 if (in_array($jourLabel, array_keys($horairesStandards))) {
@@ -285,8 +364,10 @@ class SemaineResource extends Resource
                 }
             }
     
+            // Récupérer les salles disponibles ce jour-là
             $dispos = DispoSalle::where('jour', $jourLabel)->get();
     
+            // Créer les créneaux pour chaque salle disponible
             foreach ($dispos as $dispo) {
                 $salleNumero = $dispo->fk_salle;
     
@@ -295,6 +376,7 @@ class SemaineResource extends Resource
                     $startTime = Carbon::parse($heure);
                     $endTime = $startTime->copy()->addMinutes($durée);
     
+                    // Vérifier que le créneau est inclus dans les disponibilités de la salle
                     if (
                         $startTime->format('H:i:s') >= $dispo->debut &&
                         $endTime->format('H:i:s') <= $dispo->fin
@@ -321,6 +403,11 @@ class SemaineResource extends Resource
             ->send();
     }      
 
+    /**
+     * Définit les pages associées à cette ressource
+     * 
+     * @return array Liste des pages et leurs routes
+     */
     public static function getPages(): array
     {
         return [

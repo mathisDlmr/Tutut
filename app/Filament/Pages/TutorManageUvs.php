@@ -13,6 +13,16 @@ use App\Enums\Roles;
 use App\Models\User;
 use Filament\Notifications\Notification;
 
+/**
+ * Page de gestion des UVs pour les tuteurs
+ * 
+ * Cette page permet aux tuteurs de gérer les UVs (unités de valeur) qu'ils proposent d'enseigner.
+ * Fonctionnalités:
+ * - Sélection d'UVs existantes depuis le catalogue
+ * - Proposition de nouvelles UVs (pour les tuteurs privilégiés)
+ * - Gestion des langues d'enseignement proposées par le tuteur
+ * - Visualisation et suppression des UVs déjà sélectionnées
+ */
 class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
     use Forms\Concerns\InteractsWithForms;

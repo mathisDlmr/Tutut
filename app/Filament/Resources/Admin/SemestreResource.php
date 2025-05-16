@@ -16,6 +16,18 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
 use App\Filament\Resources\Admin\SemestreResource\Pages;
 
+/**
+ * Resource de gestion des semestres
+ * 
+ * Cette ressource permet aux administrateurs et tuteurs privilégiés
+ * de gérer les semestres académiques.
+ * Fonctionnalités :
+ * - Création et édition des semestres (code, dates)
+ * - Configuration des périodes d'examens (médians et finaux)
+ * - Activation/désactivation des semestres
+ * - Visualisation du semestre actif
+ * - Tri par date de fin pour montrer les semestres les plus récents en premier
+ */
 class SemestreResource extends Resource
 {
     protected static ?string $model = Semestre::class;

@@ -15,21 +15,49 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Filament\Resources\Resource;
 
+/**
+ * Resource de comptabilité pour les tuteurs employés
+ * 
+ * Cette ressource permet aux tuteurs employés de gérer et suivre
+ * leurs heures de tutorat pour la comptabilisation.
+ * Fonctionnalités :
+ * - Affichage des créneaux par semaine
+ * - Marquage des créneaux comme comptabilisés
+ * - Ajout d'heures supplémentaires avec justification
+ * - Filtrage pour afficher uniquement les créneaux non comptabilisés
+ * - Tableau récapitulatif des heures par semaine
+ * - Statut de validation par l'administration
+ */
 class ComptabiliteTutorResource extends Resource
 {
     protected static ?string $model = Comptabilite::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     
+    /**
+     * Obtient le label du modèle pour la ressource
+     * 
+     * @return string Le label traduit pour le modèle
+     */
     public static function getModelLabel(): string
     {
         return __('resources.comptabilite_tutor.label');
     }
 
+    /**
+     * Obtient le label pluriel du modèle pour la ressource
+     * 
+     * @return string Le label pluriel traduit pour le modèle
+     */
     public static function getPluralModelLabel(): string
     {
         return __('resources.comptabilite_tutor.plural_label');
     }
 
+    /**
+     * Obtient le groupe de navigation pour la ressource
+     * 
+     * @return string Le groupe de navigation traduit
+     */
     public static function getNavigationGroup(): string
     {
         return __('resources.common.navigation.tutorat');
@@ -37,6 +65,14 @@ class ComptabiliteTutorResource extends Resource
     
     protected static ?int $navigationSort = 2;
 
+    /**
+     * Vérifie si l'utilisateur peut accéder à cette ressource
+     * 
+     * Seuls les tuteurs employés (privilégiés ou non) peuvent accéder
+     * à cette ressource de comptabilité.
+     * 
+     * @return bool Vrai si l'utilisateur a le droit d'accéder, faux sinon
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user();
@@ -44,6 +80,16 @@ class ComptabiliteTutorResource extends Resource
             || Auth::user()->role === Roles::EmployedTutor->value);
     }  
 
+    /**
+     * Active ou désactive la comptabilisation d'un créneau
+     * 
+     * Cette méthode permet à un tuteur de marquer un créneau comme comptabilisé
+     * ou non, en fonction de son rôle dans ce créneau (tuteur 1 ou 2).
+     * 
+     * @param int $creneauId L'identifiant du créneau à modifier
+     * @param bool $value La valeur à définir (true = comptabilisé, false = non comptabilisé)
+     * @throws \Illuminate\Auth\Access\AuthorizationException Si l'utilisateur n'est pas autorisé
+     */
     public function toggleCreneauCompted($creneauId, $value)
     {
         $user = Auth::user();
@@ -60,6 +106,18 @@ class ComptabiliteTutorResource extends Resource
         $creneau->save();
     }  
 
+    /**
+     * Configure le formulaire de comptabilité des heures
+     * 
+     * Ce formulaire permet aux tuteurs employés de :
+     * - Filtrer pour voir uniquement les créneaux non comptabilisés
+     * - Voir et gérer leurs créneaux par semaine
+     * - Ajouter des heures supplémentaires avec justification
+     * - Marquer les créneaux comme comptabilisés
+     * 
+     * @param Form $form Le formulaire à configurer
+     * @return Form Le formulaire configuré
+     */
     public static function form(Form $form): Form
     {
         return $form
@@ -165,6 +223,18 @@ class ComptabiliteTutorResource extends Resource
             ]);
     }        
 
+    /**
+     * Configure la table d'affichage récapitulative des comptabilités
+     * 
+     * Cette table affiche :
+     * - Les semaines
+     * - Le nombre d'heures comptabilisées par semaine
+     * - Les commentaires du BVE (Bureau de la Vie Étudiante)
+     * - Le statut de saisie de la comptabilité
+     * 
+     * @param Table $table La table à configurer
+     * @return Table La table configurée
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -191,6 +261,13 @@ class ComptabiliteTutorResource extends Resource
             ->recordUrl(null);
     }
 
+    /**
+     * Définit les relations du modèle
+     * 
+     * Aucune relation spécifique n'est définie pour cette ressource
+     * 
+     * @return array Tableau vide car pas de relations particulières
+     */
     public static function getRelations(): array
     {
         return [
@@ -198,6 +275,15 @@ class ComptabiliteTutorResource extends Resource
         ];
     }
 
+    /**
+     * Définit les pages disponibles pour cette ressource
+     * 
+     * Cette ressource contient deux pages :
+     * - la liste des comptabilités (index)
+     * - la création/édition d'une comptabilité
+     * 
+     * @return array Tableau associatif des pages
+     */
     public static function getPages(): array
     {
         return [

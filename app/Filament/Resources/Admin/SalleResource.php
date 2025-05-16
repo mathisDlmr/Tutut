@@ -18,6 +18,17 @@ use App\Enums\Roles;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Resource de gestion des salles
+ * 
+ * Cette ressource permet aux administrateurs et tuteurs privilégiés
+ * de gérer les salles disponibles pour les créneaux de tutorat.
+ * Fonctionnalités :
+ * - Création et modification de salles (numéro)
+ * - Configuration des disponibilités par jour de la semaine
+ * - Configuration des horaires spécifiques pour les périodes d'examens (médians et finaux)
+ * - Affichage condensé des disponibilités pour chaque salle
+ */
 class SalleResource extends Resource
 {
     protected static ?string $model = Salle::class;

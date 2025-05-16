@@ -10,6 +10,19 @@ use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\Tutee\BecomeTutorResource\Pages\CreateBecomeTutorRequest;
 
+/**
+ * Resource de demande pour devenir tuteur
+ * 
+ * Cette ressource permet aux tutorés de soumettre une demande pour
+ * devenir tuteur dans le système.
+ * Fonctionnalités :
+ * - Formulaire de candidature
+ * - Champs pour les informations personnelles (pré-remplis avec les données utilisateur)
+ * - Indication du semestre actuel d'étude
+ * - Lettre de motivation
+ * - Sélection des UVs que le tutoré souhaite enseigner
+ * - Affichage des demandes refusées avec message
+ */
 class BecomeTutorResource extends Resource
 {
     protected static ?string $model = BecomeTutor::class;

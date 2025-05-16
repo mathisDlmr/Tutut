@@ -12,10 +12,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Page de liste des créneaux pour les tuteurs
+ * 
+ * Cette page affiche les créneaux disponibles pour le shotgun des tuteurs.
+ * Elle organise l'affichage en onglets par semaine et gère la logique
+ * d'affichage des créneaux selon les règles de temps du shotgun.
+ */
 class ListCreneau extends ListRecords
 {
     protected static string $resource = CreneauResource::class;
     
+    /**
+     * Définit les actions d'en-tête (vides pour cette ressource)
+     * 
+     * @return array Tableau d'actions
+     */
     protected function getHeaderActions(): array
     {
         return [
@@ -23,6 +35,15 @@ class ListCreneau extends ListRecords
         ];
     }
     
+    /**
+     * Détermine si la semaine suivante doit être affichée pour l'inscription
+     * 
+     * Cette méthode vérifie, en fonction du rôle de l'utilisateur, si la date
+     * d'inscription aux créneaux de la semaine suivante est déjà passée.
+     * Permet aux tuteurs employés de réserver les créneaux à l'avance.
+     * 
+     * @return bool Vrai si la semaine suivante doit être affichée
+     */
     protected function shouldShowNextWeek(): bool
     {
         $user = Auth::user();
@@ -60,6 +81,14 @@ class ListCreneau extends ListRecords
         return $now->greaterThanOrEqualTo($registrationDate);
     }
     
+    /**
+     * Récupère les paramètres de shotgun depuis le fichier de configuration
+     * 
+     * Lit les paramètres de temps pour l'ouverture des inscriptions aux créneaux
+     * selon le type de tuteur (employé ou bénévole)
+     * 
+     * @return array Tableau associatif des paramètres de shotgun
+     */
     protected function getRegistrationSettings(): array
     {
         $settingsPath = Storage::path('settings.json');
@@ -76,6 +105,15 @@ class ListCreneau extends ListRecords
         ];
     }
     
+    /**
+     * Définit les onglets pour la liste des créneaux
+     * 
+     * Crée des onglets pour la semaine actuelle et éventuellement la semaine suivante
+     * si la période de shotgun pour celle-ci est ouverte pour le rôle de l'utilisateur.
+     * Chaque onglet affiche les créneaux d'une semaine spécifique.
+     * 
+     * @return array Tableau d'onglets configurés
+     */
     public function getTabs(): array
     {
         $userId = Auth::id();

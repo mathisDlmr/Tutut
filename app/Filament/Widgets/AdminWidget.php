@@ -11,6 +11,20 @@ use App\Models\Comptabilite;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
+/**
+ * Widget de tableau de bord administrateur
+ * 
+ * Ce widget affiche des statistiques clés pour les administrateurs concernant
+ * l'utilisation de la plateforme.
+ * Statistiques présentées :
+ * - Moyenne de tutorés par soir
+ * - Moyenne de tutorés par créneau
+ * - Nombre total de tutorés actifs
+ * - Créneaux ouverts par semaine
+ * - Nombre de tuteurs bénévoles
+ * - Total des heures effectuées
+ * - UVs les plus demandées
+ */
 class AdminWidget extends StatsOverviewWidget
 {
     public static function canView(): bool

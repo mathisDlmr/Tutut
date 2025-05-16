@@ -12,6 +12,18 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Page d'envoi d'emails
+ * 
+ * Cette page permet aux administrateurs et tuteurs privilégiés d'envoyer des emails
+ * aux différents utilisateurs de la plateforme.
+ * Fonctionnalités:
+ * - Sélection des destinataires par rôle
+ * - Éditeur riche pour le contenu des emails
+ * - Gestion de templates d'emails (sauvegarde et chargement)
+ * - Aperçu avant envoi
+ * - Envoi massif
+ */
 class SendEmail extends Page implements Forms\Contracts\HasForms
 {
     use Forms\Concerns\InteractsWithForms;

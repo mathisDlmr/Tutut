@@ -30,32 +30,75 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Resource d'inscription aux créneaux pour les tutorés
+ * 
+ * Cette ressource permet aux tutorés de consulter et de s'inscrire
+ * aux créneaux de tutorat disponibles.
+ * Fonctionnalités :
+ * - Affichage des créneaux par jour et horaire
+ * - Informations détaillées sur chaque créneau (tuteurs, langues, UVs)
+ * - Inscription et annulation d'inscription avec règles de délai
+ * - Indication du nombre de places occupées/disponibles
+ * - Export Excel pour les administrateurs
+ * - Support multilingue avec affichage des drapeaux pour les langues maîtrisées par les tuteurs
+ */
 class InscriptionCreneauResource extends Resource
 {
     protected static ?string $model = Creneaux::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?int $navigationSort = 1;
 
+    /**
+     * Obtient le label de navigation pour la ressource
+     * 
+     * @return string Le label traduit pour la navigation
+     */
     public static function getNavigationLabel(): string
     {
         return __('resources.inscription_creneau.navigation_label');
     }
 
+    /**
+     * Obtient le label du modèle pour la ressource
+     * 
+     * @return string Le label traduit pour le modèle
+     */
     public static function getModelLabel(): string
     {
         return __('resources.inscription_creneau.navigation_label');
     }
 
+    /**
+     * Obtient le label pluriel du modèle pour la ressource
+     * 
+     * @return string Le label pluriel traduit pour le modèle
+     */
     public static function getPluralModelLabel(): string
     {
         return __('resources.inscription_creneau.navigation_label');
     }
 
+    /**
+     * Configure le formulaire (non utilisé pour cette ressource)
+     * 
+     * @param Form $form Le formulaire à configurer
+     * @return Form Le formulaire configuré
+     */
     public static function form(Form $form): Form
     {
         return $form;
     }
 
+    /**
+     * Formate les codes d'UVs pour un affichage plus compact
+     * 
+     * Regroupe les codes d'UVs par préfixe pour optimiser l'affichage.
+     * Par exemple, "MT41, MT42, MT45" devient "MT41/42/45"
+     * 
+     * @param Collection $codes Collection des codes d'UVs à formater
+     * @return string Les codes formatés et regroupés
+     */
     public static function formatGroupedUvs(Collection $codes): string
     {
         return $codes
@@ -69,6 +112,11 @@ class InscriptionCreneauResource extends Resource
             ->join("\n");
     }    
 
+    /**
+     * Récupère les paramètres généraux depuis le fichier de configuration
+     * 
+     * @return array Tableau associatif des paramètres
+     */
     public static function getSettings(): array
     {
         $settingsPath = 'settings.json';
@@ -78,6 +126,15 @@ class InscriptionCreneauResource extends Resource
         return [];
     }
 
+    /**
+     * Détermine si la semaine suivante doit être affichée pour l'inscription
+     * 
+     * Cette méthode vérifie, en fonction des paramètres de configuration,
+     * si la date/heure actuelle permet aux tutorés de voir les créneaux
+     * de la semaine suivante.
+     * 
+     * @return bool Vrai si la semaine suivante doit être affichée
+     */
     protected static function shouldShowNextWeek(): bool
     {
         $settings = self::getSettings();
@@ -101,6 +158,17 @@ class InscriptionCreneauResource extends Resource
         }
     }
 
+    /**
+     * Vérifie si l'utilisateur peut annuler son inscription à un créneau
+     * 
+     * Applique diverses règles pour déterminer si l'annulation est possible :
+     * - Interdiction d'annuler un créneau déjà commencé
+     * - Option pour interdire l'annulation le jour même du créneau
+     * - Règle de délai minimum avant le début du créneau
+     * 
+     * @param Creneaux $creneau Le créneau dont on veut vérifier la possibilité d'annulation
+     * @return bool Vrai si l'annulation est possible
+     */
     protected static function canCancelInscription(Creneaux $creneau): bool
     {
         $settings = self::getSettings();
@@ -128,6 +196,20 @@ class InscriptionCreneauResource extends Resource
         return true;
     }
 
+    /**
+     * Configure la table d'affichage des créneaux pour les tutorés
+     * 
+     * Cette méthode configure une interface avancée de visualisation
+     * avec de nombreuses fonctionnalités :
+     * - Groupement des créneaux par jour et heure
+     * - Affichage détaillé des informations (tuteurs, langue, salle, etc.)
+     * - Actions d'inscription ou désinscription avec contrôle d'accès
+     * - Export Excel (pour les administrateurs uniquement)
+     * - Optimisation visuelle pour présenter de nombreuses informations
+     * 
+     * @param Table $table La table à configurer
+     * @return Table La table configurée
+     */
     public static function table(Table $table): Table
     {
         $userId = Auth::id();
@@ -363,6 +445,14 @@ class InscriptionCreneauResource extends Resource
             ->recordUrl(null);
     }                
 
+    /**
+     * Définit les pages disponibles pour cette ressource
+     * 
+     * Cette ressource ne contient qu'une page d'index qui liste
+     * les créneaux disponibles pour l'inscription.
+     * 
+     * @return array Tableau associatif des pages
+     */
     public static function getPages(): array
     {
         return [
@@ -370,6 +460,22 @@ class InscriptionCreneauResource extends Resource
         ];
     }
     
+    /**
+     * Génère un export Excel des créneaux et inscriptions
+     * 
+     * Cette méthode crée un fichier Excel structuré par semaine, avec :
+     * - Un onglet distinct pour chaque semaine du semestre actif
+     * - Regroupement des créneaux par jour et horaire
+     * - Affichage détaillé des informations pour chaque créneau :
+     *   - Tuteurs assignés et leurs UVs
+     *   - Salle et horaire
+     *   - Liste des tutorés inscrits avec leurs UVs demandées
+     * - Formatage avancé pour une meilleure lisibilité (couleurs, styles, etc.)
+     * 
+     * Accessible uniquement aux administrateurs depuis le bouton d'export
+     * 
+     * @return StreamedResponse Réponse HTTP contenant le fichier Excel en téléchargement
+     */
     public static function exportExcel()
     {
         $activeSemester = Semestre::getActive();
