@@ -2,13 +2,14 @@
 
 ## Présentation générale
 
-Tut'ut est une application de gestion de tutorat universitaire basée sur le framework Filament pour Laravel. Elle permet aux tuteurs et tutorés de gérer des créneaux de tutorat, des inscriptions, et d'organiser les séances d'accompagnement.
+Ce repo contient le code de l'application Tut'ut hébergée sur les serveurs de l'UTC.
+L'application permet la gestion du service de tutorat universitaire par l'intermédiaire du framework Filament pour Laravel. Elle permet aux tuteurs et tutorés de gérer des créneaux de tutorat, des inscriptions, et d'organiser les séances d'accompagnement.
 
 L'application est conçue pour répondre aux besoins spécifiques des établissements d'enseignement supérieur en facilitant :
 - L'organisation des séances de tutorat entre pairs
 - La mise en relation tuteurs/tutorés selon les matières (UVs)
 - La gestion administrative des tuteurs employés
-- Le suivi des séances et la comptabilité associée
+- Le suivi des séances et la comptabilité associée pour les emplois etu
 
 ## Architecture technique
 
@@ -17,8 +18,10 @@ L'application est conçue pour répondre aux besoins spécifiques des établisse
 L'application repose sur les technologies suivantes :
 - **Laravel** : Framework PHP pour le backend et la logique métier
 - **Filament** : Framework d'administration pour Laravel qui fournit une interface utilisateur moderne
-- **MySQL/MariaDB** : Système de gestion de base de données relationnelle
-- **Livewire** : Framework JavaScript minimaliste pour des interactions dynamiques côté client
+- **MySQL/Sqlite** : Système de gestion de base de données relationnelle
+  - _MySQL en prod_
+  - _Sqlite en dev_
+- **Livewire** : Framework JavaScript minimaliste pour des interactions dynamiques côté client (utilisé par Filament uniquement)
 - **Alpine.js** : Framework JavaScript léger pour la réactivité de l'UI
 
 ### Structure des répertoires
@@ -389,18 +392,9 @@ Le schéma de la base de données s'articule autour de plusieurs entités princi
 6. **Inscriptions** : Liens entre tutorés et créneaux
 7. **UVs** : Unités de valeur/matières enseignées
 
-#### Diagramme des relations clés
+#### Diagramme de la base de données
 
-```
-User (Tutor) 1──n Creneaux n──1 Salle
-                  │
-                  │
-                  n
-                  │
-User (Tutee) 1────n Inscription
-
-User (Tutor) n────m UV (via tutor_propose)
-```
+![Diagramme Base de données](BDD.png)
 
 ### Tables principales
 
