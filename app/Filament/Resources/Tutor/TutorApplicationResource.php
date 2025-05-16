@@ -18,10 +18,22 @@ class TutorApplicationResource extends Resource
 {
     protected static ?string $model = BecomeTutor::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-    protected static ?string $label = 'Candidatures Tuteur.ice';
-    protected static ?string $pluralModelLabel = 'Candidatures Tuteur.ice';
-    protected static ?string $navigationGroup = 'Gestion';
     protected static ?int $navigationSort = 6;
+
+    public static function getModelLabel(): string
+    {
+        return __('resources.tutor_application.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.tutor_application.plural_label');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.tutor_application.navigation_group');
+    }
 
     public static function canAccess(): bool
     {
@@ -36,21 +48,21 @@ class TutorApplicationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('user.firstName')
-                    ->label('Prénom')
+                    ->label(__('resources.tutor_application.fields.firstname'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.lastName')
-                    ->label('Nom')
+                    ->label(__('resources.tutor_application.fields.lastname'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('semester')
-                    ->label('Semestre')
+                    ->label(__('resources.tutor_application.fields.semester'))
                     ->badge()
                     ->color('primary'),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('resources.tutor_application.fields.status'))
                     ->badge()
                     ->formatStateUsing(fn($state) => match($state) {
-                        'pending' => 'En attente',
-                        'rejected' => 'Refusé',
+                        'pending' => __('resources.tutor_application.status.pending'),
+                        'rejected' => __('resources.tutor_application.status.rejected'),
                     })
                     ->color(fn($state) => match($state) {
                         'pending' => 'warning',
@@ -59,7 +71,7 @@ class TutorApplicationResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('semester')
-                    ->label('Semestre')
+                    ->label(__('resources.tutor_application.filters.semester'))
                     ->options(function () {
                         return BecomeTutor::select('semester')
                             ->where('status', 'pending')
@@ -67,35 +79,35 @@ class TutorApplicationResource extends Resource
                             ->pluck('semester', 'semester');
                     }),
                 Tables\Filters\Filter::make('pending')
-                    ->label('En attente uniquement')
+                    ->label(__('resources.tutor_application.filters.pending'))
                     ->query(fn (Builder $query) => $query->where('status', 'pending'))
                     ->default(),
             ])
             ->actions([
                 Action::make('view')
-                    ->label('Plus de détails')
+                    ->label(__('resources.tutor_application.actions.view.label'))
                     ->icon('heroicon-o-eye')
-                    ->modalHeading('Détails de la candidature')
+                    ->modalHeading(__('resources.tutor_application.actions.view.modal_heading'))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Fermer')
+                    ->modalCancelActionLabel(__('resources.tutor_application.actions.view.modal_cancel_label'))
                     ->modalContent(function (BecomeTutor $record) {
                         return Infolist::make()
                             ->record($record)
                             ->schema([
-                                Components\Section::make('Informations Personnelles')
+                                Components\Section::make(__('resources.tutor_application.sections.personal_info'))
                                     ->schema([
                                         Components\Grid::make(3)
                                             ->schema([
                                                 Components\TextEntry::make('user')
-                                                    ->label('Nom')
+                                                    ->label(__('resources.tutor_application.fields.lastname'))
                                                     ->formatStateUsing(fn ($state) => $state['firstName'].' '.$state['lastName']),
                                                 Components\TextEntry::make('user.email')
-                                                    ->label('Email'),
+                                                    ->label(__('resources.common.fields.email')),
                                                 Components\TextEntry::make('semester')
-                                                    ->label('Semestre'),
+                                                    ->label(__('resources.tutor_application.fields.semester')),
                                             ]),
                                     ]),
-                                Components\Section::make('Matières Proposées')
+                                Components\Section::make(__('resources.tutor_application.sections.uvs'))
                                     ->schema([
                                         Components\Grid::make(4)
                                             ->schema(function () use ($record) {
@@ -106,7 +118,7 @@ class TutorApplicationResource extends Resource
                                                     ->toArray();
                                             }),
                                     ]),
-                                Components\Section::make('Motivation')
+                                Components\Section::make(__('resources.tutor_application.sections.motivation'))
                                     ->schema([
                                         Components\TextEntry::make('motivation')
                                             ->label(false),
@@ -117,7 +129,7 @@ class TutorApplicationResource extends Resource
                         return $record->status == 'pending' 
                         ? [
                             Action::make('accept')
-                                ->label('Accepter')
+                                ->label(__('resources.tutor_application.actions.accept.label'))
                                 ->color('success')
                                 ->icon('heroicon-o-check-circle')
                                 ->action(function (BecomeTutor $record) {
@@ -127,29 +139,29 @@ class TutorApplicationResource extends Resource
                                     $record->delete();
                     
                                     Notification::make()
-                                        ->title('Candidature acceptée')
+                                        ->title(__('resources.tutor_application.actions.accept.notification_title'))
                                         ->success()
                                         ->send();
                                 })
                                 ->requiresConfirmation()
-                                ->modalHeading('Confirmer l\'acceptation')
-                                ->modalDescription('Êtes-vous sûr de vouloir accepter cette candidature ?'),
+                                ->modalHeading(__('resources.tutor_application.actions.accept.modal_heading'))
+                                ->modalDescription(__('resources.tutor_application.actions.accept.modal_description')),
                             
                             Action::make('reject')
-                                ->label('Refuser')
+                                ->label(__('resources.tutor_application.actions.reject.label'))
                                 ->color('danger')
                                 ->icon('heroicon-o-x-circle')
                                 ->action(function (BecomeTutor $record) {
                                     $record->update(['status' => 'rejected']);
                     
                                     Notification::make()
-                                        ->title('Candidature refusée')
+                                        ->title(__('resources.tutor_application.actions.reject.notification_title'))
                                         ->danger()
                                         ->send();
                                 })
                                 ->requiresConfirmation()
-                                ->modalHeading('Confirmer le refus')
-                                ->modalDescription('Êtes-vous sûr de vouloir refuser cette candidature ?'),
+                                ->modalHeading(__('resources.tutor_application.actions.reject.modal_heading'))
+                                ->modalDescription(__('resources.tutor_application.actions.reject.modal_description')),
                         ] 
                         : [];
                     }),

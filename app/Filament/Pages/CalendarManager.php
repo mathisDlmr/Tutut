@@ -17,9 +17,22 @@ use Illuminate\Support\Facades\Auth;
 class CalendarManager extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-table-cells';
-    protected static ?string $navigationLabel = 'Calendrier du semestre';
-    protected static ?string $navigationGroup = 'Gestion';
-    protected static ?string $title = 'Calendrier du semestre';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.calendar_manager.navigation_label');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.admin.navigation_group.gestion');
+    }
+
+    public function getTitle(): string
+    {
+        return __('pages.calendar_manager.title');
+    }
+
     protected static ?int $navigationSort = 5;
 
     protected static string $view = 'filament.pages.calendar-manager';
@@ -48,7 +61,7 @@ class CalendarManager extends Page
         if ($activeSemestre) {
             $dateConstraints = [
                 DatePicker::make('selectedDate')
-                    ->label('Date à modifier')
+                    ->label(__('pages.calendar_manager.selected_date'))
                     ->required()
                     ->minDate($activeSemestre->debut)
                     ->maxDate($activeSemestre->fin)
@@ -64,7 +77,7 @@ class CalendarManager extends Page
         } else {
             $dateConstraints = [
                 DatePicker::make('selectedDate')
-                    ->label('Date à modifier')
+                    ->label(__('pages.calendar_manager.selected_date'))
                     ->required()
                     ->displayFormat('d/m/Y')
                     ->closeOnDateSelection()
@@ -78,8 +91,8 @@ class CalendarManager extends Page
         }
 
         return [
-            Forms\Components\Section::make('Modification du planning')
-                ->description('Définissez les modifications d\'emploi du temps ou les jours fériés')
+            Forms\Components\Section::make(__('pages.calendar_manager.schedule_modification'))
+                ->description(__('pages.calendar_manager.schedule_description'))
                 ->schema([
                     Forms\Components\Card::make()
                         ->schema([
@@ -87,8 +100,8 @@ class CalendarManager extends Page
                             Forms\Components\Grid::make()
                                 ->schema([
                                     Toggle::make('isHoliday')
-                                        ->label('Jour férié')
-                                        ->helperText('Cochez cette case pour un jour férié')
+                                        ->label(__('pages.calendar_manager.holiday'))
+                                        ->helperText(__('pages.calendar_manager.holiday_help_text'))
                                         ->reactive()
                                         ->afterStateUpdated(function ($state) {
                                             if ($state) {
@@ -96,17 +109,17 @@ class CalendarManager extends Page
                                             }
                                         }),
                                     Select::make('selectedDayTemplate')
-                                        ->label('Modèle de journée')
+                                        ->label(__('pages.calendar_manager.day_template'))
                                         ->options([
-                                            'Lundi' => 'Lundi',
-                                            'Mardi' => 'Mardi',
-                                            'Mercredi' => 'Mercredi',
-                                            'Jeudi' => 'Jeudi',
-                                            'Vendredi' => 'Vendredi',
-                                            'Samedi' => 'Samedi',
-                                            'Dimanche' => 'Dimanche',
+                                            'Lundi' => __('pages.calendar_manager.days.monday'),
+                                            'Mardi' => __('pages.calendar_manager.days.tuesday'),
+                                            'Mercredi' => __('pages.calendar_manager.days.wednesday'),
+                                            'Jeudi' => __('pages.calendar_manager.days.thursday'),
+                                            'Vendredi' => __('pages.calendar_manager.days.friday'),
+                                            'Samedi' => __('pages.calendar_manager.days.saturday'),
+                                            'Dimanche' => __('pages.calendar_manager.days.sunday'),
                                         ])
-                                        ->placeholder('Sélectionnez un jour')
+                                        ->placeholder(__('pages.calendar_manager.select_day'))
                                         ->disabled(fn () => $this->isHoliday)
                                         ->reactive()
                                         ->afterStateUpdated(function ($state) {
@@ -120,12 +133,12 @@ class CalendarManager extends Page
                         ->columns(1),
                     Forms\Components\Actions::make([
                         Forms\Components\Actions\Action::make('save')
-                            ->label('Enregistrer')
+                            ->label(__('pages.calendar_manager.save'))
                             ->action('saveOverride')
                             ->color('primary')
                             ->disabled(fn () => !$this->selectedDate || ($this->isHoliday === false && empty($this->selectedDayTemplate))),
                         Forms\Components\Actions\Action::make('delete')
-                            ->label('Supprimer')
+                            ->label(__('pages.calendar_manager.delete'))
                             ->action('deleteOverride')
                             ->color('danger')
                             ->visible(fn () => $this->overrideExists($this->selectedDate)),
@@ -141,8 +154,11 @@ class CalendarManager extends Page
         
         $activeSemestre = Semestre::getActive();
         
+        $locale = app()->getLocale();
+        $carbonLocale = $locale === 'fr' ? 'fr_FR' : 'en_US';
+        
         return [
-            'monthName' => Carbon::parse($this->currentMonth)->locale('fr_FR')->isoFormat('MMMM YYYY'),
+            'monthName' => Carbon::parse($this->currentMonth)->locale($carbonLocale)->isoFormat('MMMM YYYY'),
             'daysOfWeek' => $this->daysOfWeek,
             'weeks' => $this->generateCalendarData(),
             'previousMonth' => $this->canNavigateToPreviousMonth() ? Carbon::parse($this->currentMonth)->subMonth()->format('Y-m') : null,
@@ -271,8 +287,11 @@ class CalendarManager extends Page
             
             if ($selectedDate->lt($debut) || $selectedDate->gt($fin)) {
                 Notification::make()
-                    ->title('Date hors du semestre actif')
-                    ->body("La date sélectionnée doit être entre {$debut->format('d/m/Y')} et {$fin->format('d/m/Y')}")
+                    ->title(__('pages.calendar_manager.date_out_of_range'))
+                    ->body(__('pages.calendar_manager.date_must_be_between', [
+                        'start' => $debut->format('d/m/Y'),
+                        'end' => $fin->format('d/m/Y')
+                    ]))
                     ->danger()
                     ->send();
                 return;
@@ -290,7 +309,7 @@ class CalendarManager extends Page
         $this->loadAllOverrides();
 
         Notification::make()
-            ->title('Modification enregistrée')
+            ->title(__('pages.calendar_manager.modification_saved'))
             ->success()
             ->send();
     }
@@ -308,16 +327,24 @@ class CalendarManager extends Page
         $this->selectedDayTemplate = null;
 
         Notification::make()
-            ->title('Modification supprimée')
+            ->title(__('pages.calendar_manager.modification_deleted'))
             ->success()
             ->send();
     }
 
     private function initializeCalendar()
     {
-        $this->daysOfWeek = [
-            'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'
-        ];
+        $locale = app()->getLocale();
+        
+        if ($locale === 'fr') {
+            $this->daysOfWeek = [
+                'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'
+            ];
+        } else {
+            $this->daysOfWeek = [
+                'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'
+            ];
+        }
     }
 
     private function loadAllOverrides()

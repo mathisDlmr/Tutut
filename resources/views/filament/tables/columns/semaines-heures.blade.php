@@ -19,7 +19,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                    </svg>';
             
-            $content .= "<span class='font-medium'>Semaine {$semaine->numero} :</span> {$heures} h $validatedIcon<br>";
+            $content .= "<span class='font-medium'>" . __('pages.tables.columns.semaines_heures.semaine') . " {$semaine->numero} :</span> {$heures} h $validatedIcon<br>";
             
             if (!empty($heures_supp)) {
                 $content .= "<ul class='text-gray-600 text-sm italic'>";
@@ -42,7 +42,7 @@
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" />
                         <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="1.5" />
                     </svg>
-                    <span>Aucun résultat disponible</span>
+                    <span>{{ __('pages.tables.columns.semaines_heures.no_results') }}</span>
                 </div>
             @endif
         </div>

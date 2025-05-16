@@ -4,10 +4,10 @@
     </div>
 
     <h2 class="mt-4 text-lg font-medium tracking-tight">
-        Aucun créneau trouvé
+        {{ __('resources.components.no_creneaux.title') }}
     </h2>
 
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        Vous n'avez pas de créneaux à valider pour cette semaine.
+        {{ __('resources.components.no_creneaux.description') }}
     </p>
 </div>

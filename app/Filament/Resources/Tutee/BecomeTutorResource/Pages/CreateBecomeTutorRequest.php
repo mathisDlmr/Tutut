@@ -17,7 +17,7 @@ class CreateBecomeTutorRequest extends CreateRecord
 
     public function getTitle(): string|Htmlable
     {
-        return 'Devenir Tuteur.ice';
+        return __('resources.become_tutor.title');
     }
     
     protected function hasCreateAction(): bool
@@ -29,23 +29,23 @@ class CreateBecomeTutorRequest extends CreateRecord
     {
         return [
             Action::make('save')
-                ->label('Enregistrer')
+                ->label(__('resources.become_tutor.actions.save'))
                 ->submit('create')
                 ->color('primary'),
             Action::make('delete')
-                ->label('Supprimer la demande')
+                ->label(__('resources.become_tutor.actions.delete'))
                 ->color('danger')
                 ->requiresConfirmation()
-                ->modalHeading('Supprimer la candidature')
-                ->modalDescription('Êtes-vous sûr de vouloir supprimer votre candidature ?')
+                ->modalHeading(__('resources.become_tutor.actions.delete_modal_title'))
+                ->modalDescription(__('resources.become_tutor.actions.delete_modal_description'))
                 ->action(function () {
                     $existingRequest = Auth::user()->becomeTutorRequest;
                     if ($existingRequest) {
                         $existingRequest->delete();
                         
                         Notification::make()
-                            ->title('Candidature supprimée')
-                            ->body('Votre candidature a été supprimée avec succès.')
+                            ->title(__('resources.become_tutor.notifications.deleted_title'))
+                            ->body(__('resources.become_tutor.notifications.deleted_body'))
                             ->danger()
                             ->send();     
                         
@@ -76,8 +76,8 @@ class CreateBecomeTutorRequest extends CreateRecord
     protected function afterCreate(): void
     {
         Notification::make()
-            ->title('Candidature soumise avec succès')
-            ->body("Votre demande pour devenir tuteur.ice a été enregistrée et est en attente d'approbation.")
+            ->title(__('resources.become_tutor.notifications.submitted_title'))
+            ->body(__('resources.become_tutor.notifications.submitted_body'))
             ->success()
             ->send();
     }

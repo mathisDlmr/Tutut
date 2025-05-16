@@ -7,7 +7,7 @@
         </svg>
     </div>
     <div>
-        <strong style="display: block; margin-bottom: 4px;">Votre candidature a été refusée.</strong>
-        <span style="font-size: 14px;">Vous pouvez modifier votre demande et la soumettre à nouveau pour une nouvelle évaluation.</span>
+        <strong style="display: block; margin-bottom: 4px;">{{ __('pages.components.tutor_rejected.title') }}</strong>
+        <span style="font-size: 14px;">{{ __('pages.components.tutor_rejected.message') }}</span>
     </div>
 </div>

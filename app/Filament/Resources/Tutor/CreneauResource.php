@@ -25,6 +25,26 @@ class CreneauResource extends Resource
     protected static ?string $navigationGroup = 'Tutorat';
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationLabel(): string
+    {
+        return __('resources.creneau.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('resources.creneau.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.creneau.plural_label');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.common.navigation.tutorat');
+    }
+
     public static function canAccess(): bool
     {
         $user = Auth::user();
@@ -131,7 +151,7 @@ class CreneauResource extends Resource
             ->query($query)
             ->groups([
                 Tables\Grouping\Group::make('day_and_time')
-                    ->label('Jour et horaire')
+                    ->label(__('resources.common.fields.jour_et_horaire'))
                     ->titlePrefixedWithLabel(false)
                     ->getTitleFromRecordUsing(fn(Creneaux $record) =>
                         ucfirst($record->start->translatedFormat('l d F Y')) . ' - ' . 
@@ -147,32 +167,32 @@ class CreneauResource extends Resource
                 Tables\Columns\Layout\Stack::make([
                     Tables\Columns\Layout\Split::make([
                         TextColumn::make('fk_salle')
-                            ->label('Salle')
+                            ->label(__('resources.common.fields.salle'))
                             ->icon('heroicon-o-map-pin')
                             ->color('gray'),
         
                         TextColumn::make('semaine.numero')
-                            ->label('Semaine')
-                            ->formatStateUsing(fn($state)=>'Semaine '.$state)
+                            ->label(__('resources.common.fields.semaine'))
+                            ->formatStateUsing(fn($state) => __('resources.common.format.semaine_numero', ['number' => $state]))
                             ->icon('heroicon-o-calendar')
                             ->color('gray'),
                     ]),    
                     Tables\Columns\Layout\Split::make([
                         TextColumn::make('tutor1.firstName')
-                            ->label('Tuteur 1')
+                            ->label(__('resources.common.fields.tuteur1'))
                             ->icon('heroicon-o-user')
                             ->color('gray')
-                            ->placeholder('—'),
+                            ->placeholder(__('resources.common.placeholders.none')),
         
                         TextColumn::make('tutor2.firstName')
-                            ->label('Tuteur 2')
+                            ->label(__('resources.common.fields.tuteur2'))
                             ->icon('heroicon-o-user')
                             ->color('gray')
-                            ->placeholder('—'),
+                            ->placeholder(__('resources.common.placeholders.none')),
                     ]),
     
                     TextColumn::make('id')
-                        ->label('UVs proposées')
+                        ->label(__('resources.common.fields.uvs_proposees'))
                         ->formatStateUsing(function ($state, Creneaux $creneau) {
                             $uvs = collect();
                     
@@ -184,7 +204,7 @@ class CreneauResource extends Resource
                                 $uvs = $uvs->merge($creneau->tutor2->proposedUvs->pluck('code'));
                             }
                     
-                            return $uvs->unique()->sort()->implode(', ') ?: '—';
+                            return $uvs->unique()->sort()->implode(', ') ?: __('resources.common.placeholders.none');
                         })
                         ->icon('heroicon-o-academic-cap')
                         ->color('primary'),
@@ -198,7 +218,7 @@ class CreneauResource extends Resource
             ])
             ->actions([
                 Action::make('toggleShotgun1')
-                    ->label(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'Se désinscrire' : 'Shotgun 1')
+                    ->label(fn(Creneaux $record) => $record->tutor1_id === $userId ? __('resources.common.buttons.se_desinscrire') : __('resources.common.buttons.shotgun_1'))
                     ->color(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>
@@ -213,7 +233,7 @@ class CreneauResource extends Resource
                     }),
             
                 Action::make('toggleShotgun2')
-                    ->label(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'Se désinscrire' : 'Shotgun 2')
+                    ->label(fn(Creneaux $record) => $record->tutor2_id === $userId ? __('resources.common.buttons.se_desinscrire') : __('resources.common.buttons.shotgun_2'))
                     ->color(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'danger' : 'primary')
                     ->button()
                     ->visible(fn(Creneaux $record) =>

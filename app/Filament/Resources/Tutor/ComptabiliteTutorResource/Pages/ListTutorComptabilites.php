@@ -14,7 +14,7 @@ class ListTutorComptabilites extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Confirmer les heures')
+                ->label(__('resources.comptabilite_tutor.actions.confirm_hours'))
         ];
     }
 }

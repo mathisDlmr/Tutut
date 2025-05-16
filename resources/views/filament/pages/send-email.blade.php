@@ -10,7 +10,7 @@
             :class="!$canPreviewEmailFlag ? 'opacity-50 cursor-not-allowed' : ''"
             :disabled="!$canPreviewEmailFlag"
         >
-            Aperçu du mail
+            {{ __('pages.send_email.preview') }}
         </x-filament::button>
         
         <x-filament::button
@@ -21,7 +21,7 @@
             :class="!$canSendEmailFlag ? 'opacity-50 cursor-not-allowed' : ''"
             :disabled="!$canSendEmailFlag"
         >
-            Envoyer le mail
+            {{ __('pages.send_email.send') }}
         </x-filament::button>
         
         <x-filament::button
@@ -32,7 +32,7 @@
             :class="!$canSaveTemplateFlag ? 'opacity-50 cursor-not-allowed' : ''"
             :disabled="!$canSaveTemplateFlag"
         >
-            Enregistrer comme template
+            {{ __('pages.send_email.save_template') }}
         </x-filament::button>
         
         @if ($template)
@@ -41,7 +41,7 @@
                 icon="heroicon-o-trash"
                 color="danger"
             >
-                Supprimer le template
+                {{ __('pages.send_email.delete_template') }}
             </x-filament::button>
         @endif
     </div>
@@ -55,7 +55,7 @@
                 color="gray"
                 wire:click="$dispatch('close-modal', { id: 'email-preview' })"
             >
-                Fermer
+                {{ __('pages.send_email.close') }}
             </x-filament::button>
         </x-slot>
     </x-filament::modal>

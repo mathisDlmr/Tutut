@@ -22,7 +22,22 @@ class SalleResource extends Resource
 {
     protected static ?string $model = Salle::class;
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
-    protected static ?string $navigationGroup = 'Gestion';
+    
+    public static function getModelLabel(): string
+    {
+        return __('resources.admin.salle.label');
+    }
+    
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.admin.salle.plural_label');
+    }
+    
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.admin.navigation_group.gestion');
+    }
+    
     protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
@@ -35,40 +50,45 @@ class SalleResource extends Resource
     public static function form(Form $form): Form
     {
         $jours = [
-            'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi',
+            __('resources.admin.salle.jours.lundi'), 
+            __('resources.admin.salle.jours.mardi'), 
+            __('resources.admin.salle.jours.mercredi'), 
+            __('resources.admin.salle.jours.jeudi'), 
+            __('resources.admin.salle.jours.vendredi'), 
+            __('resources.admin.salle.jours.samedi'),
         ];
     
         $creneauxParJour = [
-            'Lundi' => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
-            'Mardi' => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
-            'Mercredi' => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
-            'Jeudi' => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
-            'Vendredi' => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
-            'Samedi' => ['10h30-12h'],
-            'Médians' => ['08h00-20h40'],
-            'Finaux' => ['08h00-20h40'],
+            __('resources.admin.salle.jours.lundi') => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
+            __('resources.admin.salle.jours.mardi') => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
+            __('resources.admin.salle.jours.mercredi') => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
+            __('resources.admin.salle.jours.jeudi') => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
+            __('resources.admin.salle.jours.vendredi') => ['12h30-14h', '18h40-19h40', '19h40-20h40'],
+            __('resources.admin.salle.jours.samedi') => ['10h30-12h'],
+            __('resources.admin.salle.jours.medians') => ['08h00-20h40'],
+            __('resources.admin.salle.jours.finaux') => ['08h00-20h40'],
         ];        
     
         return $form
             ->schema([
                 TextInput::make('numero')
-                    ->label('Numéro de salle')
+                    ->label(__('resources.admin.salle.fields.numero'))
                     ->required()
                     ->unique(ignoreRecord: true),
     
                     Grid::make(2)
                     ->schema(
                         collect($creneauxParJour)->map(function ($creneaux, $jour) {
-                            if (in_array($jour, ['Médians', 'Finaux'])) {
+                            if (in_array($jour, [__('resources.admin.salle.jours.medians'), __('resources.admin.salle.jours.finaux')])) {
                                 return Fieldset::make($jour)
                                     ->schema([
                                         TimePicker::make("dispos.$jour.debut")
-                                            ->label('Heure de début')
+                                            ->label(__('resources.admin.salle.fields.heure_debut'))
                                             ->seconds(false)
                                             ->required(),
                 
                                         TimePicker::make("dispos.$jour.fin")
-                                            ->label('Heure de fin')
+                                            ->label(__('resources.admin.salle.fields.heure_fin'))
                                             ->seconds(false)
                                             ->required(),
                                     ]);
@@ -91,10 +111,10 @@ class SalleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('numero')
-                    ->label('Numéro de salle'),
+                    ->label(__('resources.admin.salle.fields.numero')),
 
                 TextColumn::make('disponibilites')
-                    ->label('Disponibilités')
+                    ->label(__('resources.admin.salle.fields.disponibilites'))
                     ->formatStateUsing(fn ($state, $record) =>
                         $record->disponibilites
                         ->groupBy('jour')

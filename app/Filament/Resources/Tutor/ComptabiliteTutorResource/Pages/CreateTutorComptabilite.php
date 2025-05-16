@@ -18,12 +18,12 @@ class CreateTutorComptabilite extends CreateRecord
     {
         return [
             \Filament\Actions\Action::make('cancel')
-                ->label('Annuler')
+                ->label(__('resources.comptabilite_tutor.actions.cancel'))
                 ->url($this->previousUrl ?? static::getResource()::getUrl())
                 ->color('gray'),
     
             \Filament\Actions\Action::make('save')
-                ->label('Enregistrer')
+                ->label(__('resources.comptabilite_tutor.actions.save'))
                 ->action('create')
                 ->color('primary'),
         ];
@@ -33,12 +33,12 @@ class CreateTutorComptabilite extends CreateRecord
     {
         return [
             \Filament\Actions\Action::make('cancel')
-                ->label('Annuler')
+                ->label(__('resources.comptabilite_tutor.actions.cancel'))
                 ->url($this->previousUrl ?? static::getResource()::getUrl())
                 ->color('gray'),
     
             \Filament\Actions\Action::make('save')
-                ->label('Enregistrer')
+                ->label(__('resources.comptabilite_tutor.actions.save'))
                 ->action('create')
                 ->color('primary'),
         ];
@@ -46,13 +46,13 @@ class CreateTutorComptabilite extends CreateRecord
 
     public function getTitle(): string
     {
-        return 'Confirmer les heures';
+        return __('resources.comptabilite_tutor.actions.confirm_hours');
     }
 
     public function getSubheading(): string|Htmlable|null
     {
         $user = Auth::user();
-        return "Pensez à enregistrer avant de quitter cette page";
+        return __('resources.comptabilite_tutor.subheadings.save_reminder');
     }
 
     public function toggleCreneauCompted($creneauId, $value)
@@ -124,7 +124,7 @@ class CreateTutorComptabilite extends CreateRecord
         }
     
         Notification::make()
-            ->title('Heures mises à jour')
+            ->title(__('resources.comptabilite_tutor.notifications.hours_updated'))
             ->success()
             ->send();
     

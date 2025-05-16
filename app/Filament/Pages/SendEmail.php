@@ -18,8 +18,6 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-paper-airplane';
     protected static string $view = 'filament.pages.send-email';
-    protected static ?string $navigationLabel = 'Envoyer un mail';
-    protected static ?string $navigationGroup = 'Gestion';
     protected static ?int $navigationSort = 2;
 
     public $template;
@@ -32,6 +30,16 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     public $canSendEmailFlag = false;
     public $canPreviewEmailFlag = false;
     public $canSaveTemplateFlag = false;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('resources.pages.send_email.title');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.pages.send_email.navigation_group');
+    }
 
     public function mount()
     {
@@ -51,7 +59,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
         return [
             Grid::make(2)->schema([
                 Select::make('template')
-                    ->label('Charger un template')
+                    ->label(__('resources.pages.send_email.fields.template'))
                     ->options(fn () => $this->templateOptions)
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set) {
@@ -66,16 +74,16 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
             ]),
     
             Select::make('roles')
-                ->label('Destinataires')
+                ->label(__('resources.pages.send_email.fields.roles'))
                 ->multiple()
                 ->options(collect(Roles::cases())
                     ->mapWithKeys(fn ($role) => [
                         $role->value => match ($role) {
-                            Roles::Administrator => 'Administrateur',
-                            Roles::EmployedPrivilegedTutor => 'Tuteur privilégié employé',
-                            Roles::EmployedTutor => 'Tuteur employé',
-                            Roles::Tutor => 'Tuteur',
-                            Roles::Tutee => 'Élève',
+                            Roles::Administrator => __('resources.pages.send_email.roles.administrator'),
+                            Roles::EmployedPrivilegedTutor => __('resources.pages.send_email.roles.employed_privileged_tutor'),
+                            Roles::EmployedTutor => __('resources.pages.send_email.roles.employed_tutor'),
+                            Roles::Tutor => __('resources.pages.send_email.roles.tutor'),
+                            Roles::Tutee => __('resources.pages.send_email.roles.tutee'),
                         }
                     ])
                     ->toArray()
@@ -85,23 +93,23 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
                 ->required(),
     
             TextInput::make('mailTitle')
-                ->label('Sujet')
+                ->label(__('resources.pages.send_email.fields.mail_title'))
                 ->reactive()
                 ->afterStateUpdated(fn () => $this->updateButtonStates())
                 ->required(),
     
             RichEditor::make('content')
-                ->label('Contenu')
+                ->label(__('resources.pages.send_email.fields.content'))
                 ->reactive()
                 ->afterStateUpdated(fn () => $this->updateButtonStates())
                 ->required(),
     
             TextInput::make('templateName')
-                ->label('Nom du template')
-                ->placeholder('Nom pour enregistrer un template')
+                ->label(__('resources.pages.send_email.fields.template_name'))
+                ->placeholder(__('resources.pages.send_email.fields.template_name'))
                 ->reactive()
                 ->afterStateUpdated(fn () => $this->updateButtonStates())
-                ->helperText("Requis uniquement pour l'enregistrement"),
+                ->helperText(__('resources.pages.send_email.fields.template_name_helper')),
         ];
     }    
 
@@ -128,8 +136,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     {
         if (empty($this->roles)) {
             Notification::make()
-                ->title('Erreur')
-                ->body('Veuillez sélectionner au moins un rôle.')
+                ->title(__('resources.pages.send_email.notifications.error_title'))
+                ->body(__('resources.pages.send_email.notifications.error_select_role'))
                 ->danger()
                 ->send();
             return;
@@ -145,8 +153,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
         }
 
         Notification::make()
-            ->title('Succès')
-            ->body("Email envoyé à {$users->count()} utilisateur(s).")
+            ->title(__('resources.pages.send_email.notifications.success_title'))
+            ->body(trans('resources.pages.send_email.notifications.success_body', ['count' => $users->count()]))
             ->success()
             ->send();
     }
@@ -155,8 +163,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     {
         if (empty($this->templateName)) {
             Notification::make()
-                ->title('Erreur')
-                ->body('Veuillez entrer un nom pour enregistrer le template.')
+                ->title(__('resources.pages.send_email.notifications.error_title'))
+                ->body(__('resources.pages.send_email.notifications.error_template_name'))
                 ->danger()
                 ->send();
             return;
@@ -172,8 +180,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
         Storage::put($filename, json_encode($templateData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         Notification::make()
-            ->title('Template enregistré')
-            ->body("Le template « {$this->templateName} » a été sauvegardé.")
+            ->title(__('resources.pages.send_email.notifications.template_saved_title'))
+            ->body(trans('resources.pages.send_email.notifications.template_saved_body', ['name' => $this->templateName]))
             ->success()
             ->send();
 
@@ -188,8 +196,8 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
             Storage::delete("email-templates/{$this->template}.json");
 
             Notification::make()
-                ->title('Template supprimé')
-                ->body("Le template « {$this->template} » a été supprimé.")
+                ->title(__('resources.pages.send_email.notifications.template_deleted_title'))
+                ->body(trans('resources.pages.send_email.notifications.template_deleted_body', ['name' => $this->template]))
                 ->success()
                 ->send();
 

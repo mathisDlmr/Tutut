@@ -20,8 +20,22 @@ class SemestreResource extends Resource
 {
     protected static ?string $model = Semestre::class;
     protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
-    protected static ?string $navigationGroup = 'Gestion';
     protected static ?int $navigationSort = 4;
+
+    public static function getModelLabel(): string
+    {
+        return __('resources.admin.semestre.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.admin.semestre.plural_label');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.admin.navigation_group.gestion');
+    }
 
     public static function canAccess(): bool
     {
@@ -36,16 +50,17 @@ class SemestreResource extends Resource
             Forms\Components\Grid::make(3)
                 ->schema([
                     Forms\Components\TextInput::make('code')
+                        ->label(__('resources.admin.semestre.fields.code'))
                         ->required()
                         ->maxLength(3)
                         ->placeholder('A25')
                         ->columnSpan(1),
 
                     Forms\Components\DatePicker::make('debut')
+                        ->label(__('resources.admin.semestre.fields.debut'))
                         ->required()
                         ->columnSpan(1)
                         ->reactive()
-
                         ->afterStateUpdated(function (callable $set, $state, $get) {
                             $fin = $get('fin');
                             if ($fin && $state >= $fin) {
@@ -54,10 +69,10 @@ class SemestreResource extends Resource
                         }),
 
                     Forms\Components\DatePicker::make('fin')
+                        ->label(__('resources.admin.semestre.fields.fin'))
                         ->required()
                         ->columnSpan(1)
                         ->reactive()
-
                         ->afterStateUpdated(function (callable $set, $state, $get) {
                             $debut = $get('debut');
                             if ($debut && $state <= $debut) {
@@ -68,10 +83,14 @@ class SemestreResource extends Resource
 
             Forms\Components\Grid::make(2)
                 ->schema([
-                    DatePicker::make('debut_medians'),
-                    DatePicker::make('fin_medians'),
-                    DatePicker::make('debut_finaux'),
-                    DatePicker::make('fin_finaux'),
+                    DatePicker::make('debut_medians')
+                        ->label(__('resources.admin.semestre.fields.debut_medians')),
+                    DatePicker::make('fin_medians')
+                        ->label(__('resources.admin.semestre.fields.fin_medians')),
+                    DatePicker::make('debut_finaux')
+                        ->label(__('resources.admin.semestre.fields.debut_finaux')),
+                    DatePicker::make('fin_finaux')
+                        ->label(__('resources.admin.semestre.fields.fin_finaux')),
                 ]),
         ]);
     }
@@ -81,24 +100,25 @@ class SemestreResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('code')
-                    ->label('Code')
+                    ->label(__('resources.admin.semestre.fields.code'))
                     ->searchable(),                    
                 TextColumn::make('is_active')
-                    ->label('Actif')
-                    ->formatStateUsing(fn (bool $state) => $state ? 'Oui' : 'Non')
+                    ->label(__('resources.admin.semestre.fields.is_active'))
+                    ->formatStateUsing(fn (bool $state) => $state ? __('resources.admin.semestre.values.oui') : __('resources.admin.semestre.values.non'))
                     ->badge()
                     ->color(fn (bool $state) => $state ? 'success' : 'gray'),  
                 TextColumn::make('debut')
-                    ->label('Date de début')
+                    ->label(__('resources.admin.semestre.fields.debut'))
                     ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('l d F Y')),
                 TextColumn::make('fin')
-                    ->label('Date de fin')
+                    ->label(__('resources.admin.semestre.fields.fin'))
                     ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('l d F Y')),
             ])
             ->defaultSort('fin', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Action::make('Activer')
+                Action::make('activer')
+                    ->label(__('resources.admin.semestre.actions.activer'))
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
                     ->color('success')

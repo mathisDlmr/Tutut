@@ -6,7 +6,7 @@
             class="transition-opacity"
             :class="!$canSaveUv ? 'opacity-50 cursor-not-allowed' : ''"
             :disabled="!$canSaveUv">
-            Ajouter
+            {{ __('pages.tutor_manage_uvs.add') }}
         </x-filament::button>
     </form>
     
@@ -15,7 +15,7 @@
     <form wire:submit.prevent="updateLanguages" class="space-y-4">
         {{ $this->languagesFormComponent }}
         <x-filament::button type="submit">
-            Mettre à jour mes langues
+            {{ __('pages.tutor_manage_uvs.update_languages') }}
         </x-filament::button>
     </form>
     

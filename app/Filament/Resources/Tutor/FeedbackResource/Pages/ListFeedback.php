@@ -14,7 +14,7 @@ class ListFeedback extends ListRecords
 
     public function getTitle(): string
     {
-        return 'Donnez-nous votre avis !';
+        return Auth::user()->role === Roles::Tutee->value ? __('resources.feedback.fields.text') : __('resources.feedback.plural_label');
     }
 
     protected function getHeaderActions(): array

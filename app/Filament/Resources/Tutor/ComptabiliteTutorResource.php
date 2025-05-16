@@ -19,9 +19,22 @@ class ComptabiliteTutorResource extends Resource
 {
     protected static ?string $model = Comptabilite::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
-    protected static ?string $label = 'Comptabilité';
-    protected static ?string $pluralModelLabel = 'Comptabilité';
-    protected static ?string $navigationGroup = 'Tutorat';
+    
+    public static function getModelLabel(): string
+    {
+        return __('resources.comptabilite_tutor.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.comptabilite_tutor.plural_label');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.common.navigation.tutorat');
+    }
+    
     protected static ?int $navigationSort = 2;
 
     public static function canAccess(): bool
@@ -52,7 +65,7 @@ class ComptabiliteTutorResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Toggle::make('filter_uncounted')
-                    ->label('Afficher uniquement les créneaux non comptés')
+                    ->label(__('resources.comptabilite_tutor.fields.only_unaccounted'))
                     ->reactive()
                     ->afterStateUpdated(fn ($state, callable $set) => $set('refresh_key', now()))
                     ->columnSpanFull(),
@@ -100,7 +113,7 @@ class ComptabiliteTutorResource extends Resource
                             ->toArray();
     
                         return Forms\Components\Group::make([
-                            Forms\Components\Section::make("Semaine {$semaine->numero} — du {$semaine->date_debut->format('d/m')} au {$semaine->date_fin->format('d/m')}")
+                            Forms\Components\Section::make(__('resources.common.format.semaine_numero', ['number' => $semaine->numero]) . " — du {$semaine->date_debut->format('d/m')} au {$semaine->date_fin->format('d/m')}")
                                 ->schema([
                                     $creneaux->isEmpty()
                                     ? Forms\Components\View::make('filament.components.empty-states.no-creneaux')
@@ -120,12 +133,12 @@ class ComptabiliteTutorResource extends Resource
                                         ),
     
                                     Forms\Components\Repeater::make("heures_supplementaires_{$semaine->id}")
-                                        ->label('Heures supplémentaires')
+                                        ->label(__('resources.comptabilite_tutor.fields.heures_supp'))
                                         ->schema([
                                             Grid::make(2)
                                                 ->schema([
                                                     TextInput::make('nb_heures')
-                                                        ->label('Durée (heures)')
+                                                        ->label(__('resources.comptabilite_tutor.fields.duree'))
                                                         ->numeric()
                                                         ->minValue(0)
                                                         ->step(0.5)
@@ -157,10 +170,10 @@ class ComptabiliteTutorResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('semaine.numero')
-                    ->label('Semaine')
+                    ->label(__('resources.comptabilite_tutor.fields.semaine'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('nb_heures')
-                    ->label('Heures comptabilisées'),
+                    ->label(__('resources.comptabilite_tutor.fields.heures_comptabilisees')),
                 Tables\Columns\TextColumn::make('commentaire_bve')
                     ->limit(50),
                 Tables\Columns\IconColumn::make('saisie')

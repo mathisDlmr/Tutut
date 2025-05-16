@@ -28,7 +28,6 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
 
     protected static ?string $navigationIcon = 'heroicon-o-cog';
     protected static string $view = 'filament.pages.settings-page';
-    protected static ?string $title = 'Settings';
     protected static ?int $navigationSort = 4;
 
     public $employedTutorRegistrationDay;
@@ -53,15 +52,23 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
         'useOneDayBeforeCancellation' => false,
     ];
     
-    protected $days = [
-        'monday' => 'Lundi',
-        'tuesday' => 'Mardi',
-        'wednesday' => 'Mercredi',
-        'thursday' => 'Jeudi',
-        'friday' => 'Vendredi',
-        'saturday' => 'Samedi',
-        'sunday' => 'Dimanche',
-    ];
+    protected function getDays(): array
+    {
+        return [
+            'monday' => __('resources.pages.settings.days.monday'),
+            'tuesday' => __('resources.pages.settings.days.tuesday'),
+            'wednesday' => __('resources.pages.settings.days.wednesday'),
+            'thursday' => __('resources.pages.settings.days.thursday'),
+            'friday' => __('resources.pages.settings.days.friday'),
+            'saturday' => __('resources.pages.settings.days.saturday'),
+            'sunday' => __('resources.pages.settings.days.sunday'),
+        ];
+    }
+
+    public function getTitle(): string
+    {
+        return __('resources.pages.settings.title');
+    }
 
     public static function canAccess(): bool
     {
@@ -100,7 +107,7 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
         Storage::put('settings.json', json_encode($this->settings));
         
         Notification::make()
-            ->title('Paramètres sauvegardés avec succès')
+            ->title(__('resources.pages.settings.notifications.settings_saved_title'))
             ->success()
             ->send();
     }
@@ -108,55 +115,55 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
     protected function getFormSchema(): array
     {
         return [
-            Section::make('Paramètres')
+            Section::make(__('resources.pages.settings.sections.main'))
                 ->schema([
                     Forms\Components\Grid::make(2)
                         ->schema([
-                            Section::make("Date d'ouverture des inscriptions pour les tuteur.ice.s employé.e.s")
+                            Section::make(__('resources.pages.settings.sections.employed_tutor_registration'))
                                 ->schema([
                                     Select::make('employedTutorRegistrationDay')
-                                        ->label('Jour')
-                                        ->options($this->days)
+                                        ->label(__('resources.pages.settings.fields.day'))
+                                        ->options($this->getDays())
                                         ->required(),
                                     TimePicker::make('employedTutorRegistrationTime')
-                                        ->label('Heure')
+                                        ->label(__('resources.pages.settings.fields.time'))
                                         ->seconds(false)
                                         ->required(),
                                 ])
                                 ->columnSpan(1)
                                 ->compact(),
 
-                            Section::make("Date d'ouverture des inscriptions pour les tuteur.ice.s bénévoles")
+                            Section::make(__('resources.pages.settings.sections.tutor_registration'))
                                 ->schema([
                                     Select::make('tutorRegistrationDay')
-                                        ->label('Jour')
-                                        ->options($this->days)
+                                        ->label(__('resources.pages.settings.fields.day'))
+                                        ->options($this->getDays())
                                         ->required(),
                                     TimePicker::make('tutorRegistrationTime')
-                                        ->label('Heure')
+                                        ->label(__('resources.pages.settings.fields.time'))
                                         ->seconds(false)
                                         ->required(),
                                 ])
                                 ->columnSpan(1)
                                 ->compact(),
 
-                            Section::make("Date d'ouverture des inscriptions pour les tutoré.e.s")
+                            Section::make(__('resources.pages.settings.sections.tutee_registration'))
                                 ->schema([
                                     Select::make('tuteeRegistrationDay')
-                                        ->label('Jour')
-                                        ->options($this->days)
+                                        ->label(__('resources.pages.settings.fields.day'))
+                                        ->options($this->getDays())
                                         ->required(),
                                     TimePicker::make('tuteeRegistrationTime')
-                                        ->label('Heure')
+                                        ->label(__('resources.pages.settings.fields.time'))
                                         ->seconds(false)
                                         ->required(),
                                 ])
                                 ->columnSpan(1)
                                 ->compact(),
-                            Section::make("Délai d'annulation des créneaux")
+                            Section::make(__('resources.pages.settings.sections.cancellation_delay'))
                                 ->schema([
                                     Toggle::make('useOneDayBeforeCancellation')
-                                        ->label('Limiter à "la veille" uniquement')
+                                        ->label(__('resources.pages.settings.fields.one_day_before'))
                                         ->reactive()
                                         ->inline(false)
                                         ->columnSpan('full'),
@@ -164,11 +171,11 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
                                     Forms\Components\Grid::make()
                                         ->schema([
                                             Select::make('minTimeCancellationDay')
-                                                ->label('Jour')
-                                                ->options($this->days)
+                                                ->label(__('resources.pages.settings.fields.day'))
+                                                ->options($this->getDays())
                                                 ->required(),
                                             TimePicker::make('minTimeCancellationTime')
-                                                ->label('Heure')
+                                                ->label(__('resources.pages.settings.fields.time'))
                                                 ->seconds(false)
                                                 ->required(),
                                         ])
@@ -181,7 +188,7 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
                         ]),
                     Forms\Components\Actions::make([
                         Forms\Components\Actions\Action::make('save')
-                            ->label('Enregistrer')
+                            ->label(__('resources.pages.settings.buttons.save'))
                             ->action('saveSettings')
                             ->color('primary'),
                     ])
@@ -193,10 +200,10 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
     {
         return $table
             ->query(UV::query())
-            ->heading('Catalogue des UVs')
+            ->heading(__('resources.pages.settings.sections.uv_catalog'))
             ->headerActions([
                 TableAction::make('reset_uvs')
-                    ->label('Reset les UVs')
+                    ->label(__('resources.pages.settings.buttons.reset_uvs'))
                     ->action(fn () => $this->resetUvs())
                     ->color('danger')
                     ->requiresConfirmation()
@@ -204,14 +211,14 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('code')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('intitule')->label('Intitulé')->searchable(),
+                Tables\Columns\TextColumn::make('intitule')->label(__('resources.pages.settings.fields.intitule'))->searchable(),
             ])
             ->actions([
                 EditAction::make()
-                    ->modalHeading('Modifier une UV')
+                    ->modalHeading(__('resources.pages.settings.modals.edit_uv_title'))
                     ->form([
-                        Forms\Components\TextInput::make('code')->label('UV')->required(),
-                        Forms\Components\TextInput::make('intitule')->label('Intitulé')->required(),
+                        Forms\Components\TextInput::make('code')->label(__('resources.pages.settings.fields.code'))->required(),
+                        Forms\Components\TextInput::make('intitule')->label(__('resources.pages.settings.fields.intitule'))->required(),
                     ]),
                 DeleteAction::make(),
             ]);
@@ -225,7 +232,7 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
 
         if (!$response->ok()) {
             Notification::make()
-                ->title('Échec de la récupération des UVs')
+                ->title(__('resources.pages.settings.notifications.uvs_update_failed_title'))
                 ->danger()
                 ->send();
             return;
@@ -247,7 +254,7 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
         }
 
         Notification::make()
-            ->title('UVs mises à jour avec succès')
+            ->title(__('resources.pages.settings.notifications.uvs_updated_title'))
             ->success()
             ->send();
     }

@@ -35,12 +35,12 @@
 
     <div class="text-sm text-gray-500 flex items-center gap-1">
         <x-heroicon-o-user-group class="h-4 w-4 text-primary-500" />
-        {{ $creneau->inscriptions->count() }} inscrit·e·s
+        {{ __('resources.components.slot_creneau.inscrits', ['count' => $creneau->inscriptions->count()]) }}
     </div>
 
     <div class="text-sm text-gray-500 flex items-center gap-1">
         <x-heroicon-o-academic-cap class="h-4 w-4 text-primary-500" />
-        {{ $uvs ?: '—' }}
+        {{ $uvs ?: __('resources.common.placeholders.none') }}
     </div>
 
     <div 
@@ -68,7 +68,7 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
             </template>
-            <span x-show="!loading || !counted">Présent·e</span>
+            <span x-show="!loading || !counted">{{ __('resources.components.slot_creneau.present') }}</span>
         </button>
 
         <button
@@ -89,7 +89,7 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
             </template>
-            <span x-show="!loading || counted !== false">Absent·e</span>
+            <span x-show="!loading || counted !== false">{{ __('resources.components.slot_creneau.absent') }}</span>
         </button>
     </div>
 </div>

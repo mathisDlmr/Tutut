@@ -26,7 +26,22 @@ class SemaineResource extends Resource
 {
     protected static ?string $model = Semaine::class;
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $navigationGroup = 'Gestion';
+    
+    public static function getModelLabel(): string
+    {
+        return __('resources.admin.semaine.label');
+    }
+    
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.admin.semaine.plural_label');
+    }
+    
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.admin.navigation_group.gestion');
+    }
+    
     protected static ?int $navigationSort = 1;
 
     public static function canAccess(): bool
@@ -51,18 +66,20 @@ class SemaineResource extends Resource
                         ->columnSpan(1),
 
                     Toggle::make('is_vacances')
-                        ->label("Vacances")
-                        ->helperText("Aucune génération de créneaux ne sera faite cette semaine")
+                        ->label(__('resources.admin.semaine.fields.is_vacances'))
+                        ->helperText(__('resources.admin.semaine.fields.helperText_is_vacances'))
                         ->columnSpan(1),
                 ]),
 
             Forms\Components\Grid::make(2)
                 ->schema([
                     DatePicker::make('date_debut')
+                        ->label(__('resources.admin.semaine.fields.date_debut'))
                         ->required()
                         ->columnSpan(1),
 
                     DatePicker::make('date_fin')
+                        ->label(__('resources.admin.semaine.fields.date_fin'))
                         ->required()
                         ->columnSpan(1),
                 ]),
@@ -74,6 +91,7 @@ class SemaineResource extends Resource
         return $table
             ->headerActions([
                 Action::make('Créer la prochaine semaine')
+                    ->label(__('resources.admin.semaine.actions.creer_prochaine'))
                     ->action(function () {
                         $semestre = Semestre::where('is_active', true)->first();
             
@@ -121,22 +139,24 @@ class SemaineResource extends Resource
                     ->icon('heroicon-o-plus'),
             ])        
             ->columns([
-                Tables\Columns\TextColumn::make('numero'),
-                Tables\Columns\TextColumn::make('semestre.code')->label('Semestre'),
+                Tables\Columns\TextColumn::make('numero')
+                    ->label(__('resources.admin.semaine.fields.numero')),
+                Tables\Columns\TextColumn::make('semestre.code')
+                    ->label(__('resources.admin.semaine.fields.fk_semestre')),
                 Tables\Columns\TextColumn::make('date_debut')
-                    ->label('Date de début')
+                    ->label(__('resources.admin.semaine.fields.date_debut'))
                     ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('d F Y')),
                 Tables\Columns\TextColumn::make('date_fin')
-                    ->label('Date de fin')
+                    ->label(__('resources.admin.semaine.fields.date_fin'))
                     ->formatStateUsing(fn (string $state) => Carbon::parse($state)->locale('fr')->translatedFormat('d F Y')),
                 Tables\Columns\TextColumn::make('is_vacances')
-                    ->label('Vacances')
-                    ->formatStateUsing(fn (bool $state) => $state ? 'Oui' : 'Non'),
+                    ->label(__('resources.admin.semaine.fields.is_vacances'))
+                    ->formatStateUsing(fn (bool $state) => $state ? __('resources.admin.semestre.values.oui') : __('resources.admin.semestre.values.non')),
             ])
             ->query(Semaine::query()->where('fk_semestre', Semestre::where('is_active', true)->first()->code))
             ->filters([
                 Tables\Filters\Filter::make('future')
-                    ->label('Semaines futures')
+                    ->label(__('resources.admin.semaine.filters.future'))
                     ->query(fn (Builder $query) => $query->where('date_fin', '>', now()))
                     ->default(),
             ])
@@ -144,13 +164,13 @@ class SemaineResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Action::make('générerCréneaux')
-                    ->label('(Re)Générer les créneaux')
+                    ->label(__('resources.admin.semaine.actions.generer_creneaux'))
                     ->action(fn (Semaine $record) => static::genererCreneaux($record))
                     ->requiresConfirmation()
                     ->color('success')
                     ->icon('heroicon-o-plus-circle'),
                 Action::make('vacances')
-                    ->label('Vacances')
+                    ->label(__('resources.admin.semaine.actions.vacances'))
                     ->icon('heroicon-o-sun')
                     ->requiresConfirmation()
                     ->action(function (Semaine $record) {
@@ -173,7 +193,7 @@ class SemaineResource extends Resource
     {
         if ($semaine->is_vacances) {
             Notification::make()
-                ->title('Pas de génération de créneaux pour les semaines de vacances.')
+                ->title(__('resources.admin.semaine.messages.pas_generation_vacances'))
                 ->danger()
                 ->send();
             return;
@@ -296,7 +316,7 @@ class SemaineResource extends Resource
         }
     
         Notification::make()
-            ->title("Créneaux générés avec succès pour la semaine {$semaine->numero}.")
+            ->title(__('resources.admin.semaine.messages.creneaux_generes', ['numero' => $semaine->numero]))
             ->success()
             ->send();
     }      

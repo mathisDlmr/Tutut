@@ -15,7 +15,12 @@ class BecomeTutorResource extends Resource
     protected static ?string $model = BecomeTutor::class;
     
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationLabel = 'Devenir Tuteur.ice';
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('resources.become_tutor.navigation_label');
+    }
+    
     protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
@@ -33,21 +38,21 @@ class BecomeTutorResource extends Resource
             ->schema([
                 Forms\Components\View::make('filament.components.refused.tutor-rejected')
                     ->visible($existingRequest && $existingRequest->status === 'rejected'),
-                Forms\Components\Section::make('Candidature Tuteur.ice')
-                    ->description('Remplissez ce formulaire pour devenir tuteur.ice')
+                Forms\Components\Section::make(__('resources.become_tutor.section_title'))
+                    ->description(__('resources.become_tutor.section_description'))
                     ->schema([
                         Forms\Components\TextInput::make('user_firstName')
-                            ->label('Prénom')
+                            ->label(__('resources.become_tutor.fields.firstName'))
                             ->default($currentUser->firstName)
                             ->disabled()
                             ->dehydrated(false),
                         Forms\Components\TextInput::make('user_lastName')
-                            ->label('Nom')
+                            ->label(__('resources.become_tutor.fields.lastName'))
                             ->default($currentUser->lastName)
                             ->disabled()
                             ->dehydrated(false),
                         Forms\Components\TextInput::make('user_email')
-                            ->label('Email')
+                            ->label(__('resources.become_tutor.fields.email'))
                             ->email()
                             ->default($currentUser->email)
                             ->disabled()
@@ -55,25 +60,25 @@ class BecomeTutorResource extends Resource
                         Forms\Components\Hidden::make('fk_user')
                             ->default($currentUser->id),
                         Forms\Components\TextInput::make('semester')
-                            ->label('Semestre (ex: TC03)')
+                            ->label(__('resources.become_tutor.fields.semester'))
                             ->required()
                             ->maxLength(4)
-                            ->helperText('Format: XXNN (ex: TC03, GI02)')
+                            ->helperText(__('resources.become_tutor.fields.semester_helper'))
                             ->regex('/^[A-Za-z]{2}[0-9]{2}$/'),
                         Forms\Components\Textarea::make('motivation')
-                            ->label('Motivation')
+                            ->label(__('resources.become_tutor.fields.motivation'))
                             ->required()
                             ->rows(5)
-                            ->placeholder('Décrivez pourquoi vous souhaitez devenir tuteur.ice et quelles sont vos expériences pertinentes'),
+                            ->placeholder(__('resources.become_tutor.fields.motivation_placeholder')),
                         Forms\Components\Hidden::make('status')
                             ->default('pending'),
                         Forms\Components\Select::make('UVs')
-                            ->label('Matières validées')
+                            ->label(__('resources.become_tutor.fields.uvs'))
                             ->options(UV::all()->pluck('code', 'code'))
                             ->multiple()
                             ->searchable()
                             ->required()
-                            ->helperText('Sélectionnez les matières que vous pouvez enseigner'),
+                            ->helperText(__('resources.become_tutor.fields.uvs_helper')),
                     ]),
             ]);
     }

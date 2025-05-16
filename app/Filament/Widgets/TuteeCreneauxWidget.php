@@ -12,12 +12,16 @@ use Illuminate\Support\Facades\Auth;
 class TuteeCreneauxWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $heading = 'Mes prochaines inscriptions tutoré.e';
 
     public static function canView(): bool
     {
         $user = Auth::user();
         return $user->role !== Roles::Administrator->value;
+    }
+
+    public function getHeading(): string
+    {
+        return __('resources.widgets.tutee_creneaux.heading');
     }
 
     protected function getTableQuery(): \Illuminate\Database\Eloquent\Builder
@@ -46,7 +50,7 @@ class TuteeCreneauxWidget extends BaseWidget
         return [
             Tables\Columns\Layout\Stack::make([
                 TextColumn::make('start')
-                    ->label('Jour')
+                    ->label(__('resources.widgets.tutee_creneaux.columns.day'))
                     ->icon('heroicon-o-calendar-days')
                     ->color('gray')
                     ->formatStateUsing(fn($state, $record) =>
@@ -55,7 +59,7 @@ class TuteeCreneauxWidget extends BaseWidget
 
                 Tables\Columns\Layout\Split::make([
                     TextColumn::make('start')
-                        ->label('Horaire')
+                        ->label(__('resources.widgets.tutee_creneaux.columns.schedule'))
                         ->icon('heroicon-o-clock')
                         ->color('gray')
                         ->formatStateUsing(fn($state, $record) =>
@@ -63,25 +67,25 @@ class TuteeCreneauxWidget extends BaseWidget
                         ),
 
                     TextColumn::make('salle.numero')
-                        ->label('Salle')
+                        ->label(__('resources.widgets.tutee_creneaux.columns.room'))
                         ->icon('heroicon-o-map-pin')
                         ->color('gray'),
                 ]),
                 Tables\Columns\Layout\Split::make([
                     TextColumn::make('tutor1.firstName')
-                        ->label('Tuteur 1')
+                        ->label(__('resources.widgets.tutee_creneaux.columns.tutor1'))
                         ->icon('heroicon-o-user')
                         ->color('gray')
-                        ->placeholder('—'),
+                        ->placeholder(__('resources.common.placeholders.none')),
 
                     TextColumn::make('tutor2.firstName')
-                        ->label('Tuteur 2')
+                        ->label(__('resources.widgets.tutee_creneaux.columns.tutor2'))
                         ->icon('heroicon-o-user')
                         ->color('gray')
-                        ->placeholder('—'),
+                        ->placeholder(__('resources.common.placeholders.none')),
                 ]),
                 TextColumn::make('id')
-                    ->label('UVs demandées')
+                    ->label(__('resources.widgets.tutee_creneaux.columns.requested_courses'))
                     ->formatStateUsing(function ($state, Creneaux $creneau) {
                         $uvs = $creneau->inscriptions
                             ->flatMap(fn($inscription) => json_decode($inscription->enseignements_souhaites ?? '[]'))
@@ -90,7 +94,7 @@ class TuteeCreneauxWidget extends BaseWidget
                             ->sort()
                             ->values();
 
-                        return $uvs->implode(', ') ?: '—';
+                        return $uvs->implode(', ') ?: __('resources.common.placeholders.none');
                     })
                     ->icon('heroicon-o-academic-cap')
                     ->color('primary'),
@@ -112,7 +116,7 @@ class TuteeCreneauxWidget extends BaseWidget
     {
         return [
             Tables\Grouping\Group::make('day')
-                ->label('Jour')
+                ->label(__('resources.widgets.tutee_creneaux.columns.day'))
                 ->getTitleFromRecordUsing(fn(Creneaux $record) =>
                     ucfirst($record->start->translatedFormat('l d F Y'))
                 )

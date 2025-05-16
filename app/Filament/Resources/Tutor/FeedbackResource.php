@@ -21,7 +21,9 @@ class FeedbackResource extends Resource
     public static function getLabel(): string
     {
         $user = Auth::user();
-        return ($user && Auth::user()->role === Roles::Tutee->value) ? 'Mes Feedbacks' : 'Feedbacks';
+        return ($user && Auth::user()->role === Roles::Tutee->value) 
+            ? __('resources.feedback.tutee_label') 
+            : __('resources.feedback.label');
     }
 
     public static function form(Form $form): Form
@@ -32,7 +34,7 @@ class FeedbackResource extends Resource
                     ->default(Auth::id()),
                 Forms\Components\Textarea::make('text')
                     ->required()
-                    ->label('Donnez-nous votre avis !'),
+                    ->label(__('resources.feedback.fields.text')),
             ]);
     }
 
@@ -55,9 +57,9 @@ class FeedbackResource extends Resource
                         $record->delete();
                     })
                     ->requiresConfirmation()
-                    ->modalHeading('Supprimer le feedback')
-                    ->modalSubheading('Êtes-vous sûr de vouloir supprimer ce feedback ?')
-                    ->modalButton('Supprimer'),
+                    ->modalHeading(__('resources.feedback.actions.delete.modal_heading'))
+                    ->modalSubheading(__('resources.feedback.actions.delete.modal_subheading'))
+                    ->modalButton(__('resources.feedback.actions.delete.modal_button')),
             ])
             ->bulkActions([
                 //

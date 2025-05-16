@@ -6,7 +6,7 @@
     @endphp
     <div class="flex items-center">
         <div class="font-bold text-primary-600">
-            @if($total > 0) Total : {{ $total }} h @endif
+            @if($total > 0) {{ __('pages.tables.columns.total_heures.total') }} : {{ $total }} h @endif
         </div>
     </div>
 </div>

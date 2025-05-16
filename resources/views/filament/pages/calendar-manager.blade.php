@@ -5,21 +5,21 @@
     <div class="flex justify-between items-center mb-4">
         @if($previousMonth)
             <button wire:click="changeMonth('{{ $previousMonth }}')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                <span>&larr; Mois précédent</span>
+                <span>&larr; {{ __('pages.calendar_manager.previous_month') }}</span>
             </button>
         @else
             <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed rounded-md">
-                <span>&larr; Mois précédent</span>
+                <span>&larr; {{ __('pages.calendar_manager.previous_month') }}</span>
             </div>
         @endif
         <h2 class="text-xl font-semibold text-center capitalize">{{ $monthName }}</h2>
         @if($nextMonth)
             <button wire:click="changeMonth('{{ $nextMonth }}')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                <span>Mois suivant &rarr;</span>
+                <span>{{ __('pages.calendar_manager.next_month') }} &rarr;</span>
             </button>
         @else
             <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed rounded-md">
-                <span>Mois suivant &rarr;</span>
+                <span>{{ __('pages.calendar_manager.next_month') }} &rarr;</span>
             </div>
         @endif
     </div>
@@ -47,7 +47,7 @@
                         <span class="text-xl font-medium">{{ $day['day'] }}</span>
                         @if ($day['override'])
                             @if ($day['override']['is_holiday'])
-                                <span class="text-base text-red-600 dark:text-red-400 font-medium">Férié</span>
+                                <span class="text-base text-red-600 dark:text-red-400 font-medium">{{ __('pages.calendar_manager.holiday') }}</span>
                             @elseif ($day['override']['day_template'])
                                 <span class="text-base text-blue-600 dark:text-blue-400 font-medium">
                                     {{ ucfirst(substr($day['override']['day_template'], 0, 3)) }}

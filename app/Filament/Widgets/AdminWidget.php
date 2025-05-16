@@ -63,13 +63,13 @@ class AdminWidget extends StatsOverviewWidget
             ->implode(', ');
 
         return [
-            Stat::make('Moyenne de tutoré.e.s / soir', number_format($moyenneParSoir, 1)),
-            Stat::make('Moyenne de tutoré.e.s / créneau', number_format($moyenneParCreneau, 1)),
-            Stat::make('Nombre total de tutoré.e.s actif.ve sur le semestre', $nbTutorésUniques),
-            Stat::make('Créneaux ouverts / semaine', $creneauxParSemaine->avg() ? round($creneauxParSemaine->avg(), 2) : 0),
-            Stat::make('Tuteurs bénévoles', $nbTuteursBénévoles),
-            Stat::make('Heures données (comptabilisées)', round($heuresTotales, 1) . 'h'),
-            Stat::make('UVs les plus demandées', $topUVs ?: '—'),
+            Stat::make(__('resources.widgets.admin.stats.avg_tutees_per_night'), number_format($moyenneParSoir, 1)),
+            Stat::make(__('resources.widgets.admin.stats.avg_tutees_per_slot'), number_format($moyenneParCreneau, 1)),
+            Stat::make(__('resources.widgets.admin.stats.total_active_tutees'), $nbTutorésUniques),
+            Stat::make(__('resources.widgets.admin.stats.open_slots_per_week'), $creneauxParSemaine->avg() ? round($creneauxParSemaine->avg(), 2) : 0),
+            Stat::make(__('resources.widgets.admin.stats.volunteer_tutors'), $nbTuteursBénévoles),
+            Stat::make(__('resources.widgets.admin.stats.total_hours'), round($heuresTotales, 1) . 'h'),
+            Stat::make(__('resources.widgets.admin.stats.most_requested_courses'), $topUVs ?: __('resources.common.placeholders.none')),
         ];
     }
 }

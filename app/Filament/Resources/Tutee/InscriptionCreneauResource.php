@@ -34,9 +34,22 @@ class InscriptionCreneauResource extends Resource
 {
     protected static ?string $model = Creneaux::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationLabel = 'Créneaux disponibles';
-    protected static ?string $pluralModelLabel = 'Créneaux disponibles';
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('resources.inscription_creneau.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('resources.inscription_creneau.navigation_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('resources.inscription_creneau.navigation_label');
+    }
 
     public static function form(Form $form): Form
     {
@@ -127,7 +140,7 @@ class InscriptionCreneauResource extends Resource
         return $table
             ->headerActions([
                 Action::make('export_excel')
-                    ->label('Exporter vers Excel')
+                    ->label(__('resources.common.buttons.export_excel'))
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('success')
                     ->button()
@@ -152,7 +165,7 @@ class InscriptionCreneauResource extends Resource
             )
             ->groups([
                 Tables\Grouping\Group::make('day_and_time')
-                    ->label('Jour et horaire')
+                    ->label(__('resources.common.fields.jour_et_horaire'))
                     ->titlePrefixedWithLabel(false)
                     ->getTitleFromRecordUsing(fn(Creneaux $record) =>
                         ucfirst($record->start->translatedFormat('l d F Y')) . ' - ' . 
@@ -168,7 +181,7 @@ class InscriptionCreneauResource extends Resource
                 Stack::make([
                     Split::make([
                         TextColumn::make('tutor1.firstName')
-                            ->label('Tuteur 1')
+                            ->label(__('resources.common.fields.tuteur1'))
                             ->icon('heroicon-o-user')
                             ->color('gray')
                             ->placeholder('—')
@@ -193,7 +206,7 @@ class InscriptionCreneauResource extends Resource
                             }),
 
                         TextColumn::make('tutor2.firstName')
-                            ->label('Tuteur 2')
+                            ->label(__('resources.common.fields.tuteur2'))
                             ->icon('heroicon-o-user')
                             ->color('gray')
                             ->placeholder('—')
@@ -220,11 +233,11 @@ class InscriptionCreneauResource extends Resource
 
                     Split::make([
                         TextColumn::make('fk_salle')
-                            ->label('Salle')
+                            ->label(__('resources.common.fields.salle'))
                             ->icon('heroicon-o-map-pin')
                             ->color('gray'),
                         TextColumn::make('places')
-                            ->label('Places')
+                            ->label(__('resources.common.fields.places'))
                             ->icon('heroicon-o-user-group')
                             ->color('gray')
                             ->getStateUsing(function (Creneaux $record) {
@@ -234,7 +247,7 @@ class InscriptionCreneauResource extends Resource
                     ]),
 
                     TextColumn::make('id')
-                        ->label('UVs proposées')
+                        ->label(__('resources.common.fields.uvs_proposees'))
                         ->formatStateUsing(function ($state, Creneaux $creneau) {
                             $uvs = collect();
                     
@@ -263,12 +276,12 @@ class InscriptionCreneauResource extends Resource
             ])
             ->actions([
                 Action::make('s_inscrire')
-                    ->label("S'inscrire")
+                    ->label(__('resources.common.buttons.s_inscrire'))
                     ->icon('heroicon-o-plus')
                     ->button()
                     ->form(fn(Creneaux $record) => [
                         Forms\Components\Select::make('enseignements_souhaites')
-                            ->label('UVs souhaitées')
+                            ->label(__('resources.common.fields.uvs_souhaitees'))
                             ->multiple()
                             ->required()
                             ->options(
@@ -301,7 +314,7 @@ class InscriptionCreneauResource extends Resource
                         ]);
                     }),
                 Action::make('se_desinscrire')
-                    ->label('Se désinscrire')
+                    ->label(__('resources.common.buttons.se_desinscrire'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->button()
@@ -312,12 +325,12 @@ class InscriptionCreneauResource extends Resource
                     ->action(function (Creneaux $record) use ($userId) {
                         $record->inscriptions()->where('tutee_id', $userId)->delete();
                     }),
-                Action::make('voir_inscrits')
-                    ->label('Voir les inscrit·e·s')
+                Action::make('viewRegistrations')
+                    ->label(__('resources.common.buttons.view_registrations'))
                     ->icon('heroicon-o-eye')
                     ->color('gray')
-                    ->modalHeading('Liste des inscrit·e·s')
-                    ->modalButton('Fermer')
+                    ->modalHeading(__('resources.inscription_creneau.modal_heading'))
+                    ->modalButton(__('resources.common.buttons.close'))
                     ->modalCancelAction(false)
                     ->visible(fn (Creneaux $record) => $record->inscriptions_count > 0)
                     ->modalContent(function (Creneaux $record) {
@@ -366,7 +379,6 @@ class InscriptionCreneauResource extends Resource
         
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
-            ->setCreator('Système de Tutorat')
             ->setTitle('Créneaux du Semestre')
             ->setDescription('Export des créneaux du semestre actif');
 

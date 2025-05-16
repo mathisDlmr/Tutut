@@ -20,8 +20,6 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static string $view = 'filament.pages.tutor-manage-uvs';
-    protected static ?string $title = 'Mes UVs proposées';
-    protected static ?string $navigationGroup = 'Tutorat';
     protected static ?int $navigationSort = 3;
 
     public array $languagesForm = [];
@@ -31,6 +29,21 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
     
     // Propriété réactive pour l'état du bouton
     public $canSaveUv = false;
+
+    public function getTitle(): string
+    {
+        return __('resources.pages.tutor_manage_uvs.title');
+    }
+
+    public static function getNavigationLabel(): string 
+    {
+        return __('resources.pages.tutor_manage_uvs.title');
+    }
+
+    public static function getNavigationGroup(): string
+    {
+        return __('resources.pages.tutor_manage_uvs.navigation_group');
+    }
 
     public static function canAccess(): bool
     {
@@ -45,16 +58,16 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
         return $this->makeForm()
             ->schema([
                 Forms\Components\CheckboxList::make('languages')
-                    ->label('Langues parlées')
+                    ->label(__('resources.pages.tutor_manage_uvs.fields.languages'))
                     ->options([
-                        'en' => '🇬🇧 Anglais',
-                        'es' => '🇪🇸 Espagnol',
-                        'zh' => '🇨🇳 Chinois',
-                        'de' => '🇩🇪 Allemand',
-                        'ar' => '🇸🇦 Arabe',
-                        'ru' => '🇷🇺 Russe',
-                        'ja' => '🇯🇵 Japonais',
-                        'it' => '🇮🇹 Italien',
+                        'en' => __('resources.pages.tutor_manage_uvs.languages.en'),
+                        'es' => __('resources.pages.tutor_manage_uvs.languages.es'),
+                        'zh' => __('resources.pages.tutor_manage_uvs.languages.zh'),
+                        'de' => __('resources.pages.tutor_manage_uvs.languages.de'),
+                        'ar' => __('resources.pages.tutor_manage_uvs.languages.ar'),
+                        'ru' => __('resources.pages.tutor_manage_uvs.languages.ru'),
+                        'ja' => __('resources.pages.tutor_manage_uvs.languages.ja'),
+                        'it' => __('resources.pages.tutor_manage_uvs.languages.it'),
                     ])
                     ->columns(2)
             ])
@@ -78,16 +91,16 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
         return $form
             ->schema([
                 Forms\Components\CheckboxList::make('languages')
-                    ->label('Langues parlées')
+                    ->label(__('resources.pages.tutor_manage_uvs.fields.languages'))
                     ->options([
-                        'en' => '🇬🇧 Anglais',
-                        'es' => '🇪🇸 Espagnol',
-                        'zh' => '🇨🇳 Chinois',
-                        'de' => '🇩🇪 Allemand',
-                        'ar' => '🇸🇦 Arabe',
-                        'ru' => '🇷🇺 Russe',
-                        'ja' => '🇯🇵 Japonais',
-                        'it' => '🇮🇹 Italien',
+                        'en' => __('resources.pages.tutor_manage_uvs.languages.en'),
+                        'es' => __('resources.pages.tutor_manage_uvs.languages.es'),
+                        'zh' => __('resources.pages.tutor_manage_uvs.languages.zh'),
+                        'de' => __('resources.pages.tutor_manage_uvs.languages.de'),
+                        'ar' => __('resources.pages.tutor_manage_uvs.languages.ar'),
+                        'ru' => __('resources.pages.tutor_manage_uvs.languages.ru'),
+                        'ja' => __('resources.pages.tutor_manage_uvs.languages.ja'),
+                        'it' => __('resources.pages.tutor_manage_uvs.languages.it'),
                     ])
                     ->columns(2)
                     ->default(Auth::user()->languages ?? [])
@@ -104,25 +117,25 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
         ]);
     
         Notification::make()
-            ->title('Langues mises à jour')
+            ->title(__('resources.pages.tutor_manage_uvs.notifications.languages_updated_title'))
             ->success()
-            ->body('Vos langues ont été mises à jour avec succès.')
+            ->body(__('resources.pages.tutor_manage_uvs.notifications.languages_updated_body'))
             ->send();
     }      
 
     public function form(Form $form): Form
     {
-        return $form->schema([
-            Forms\Components\Section::make('Proposer une UV')
-                ->description("Si vous ne trouvez pas l'UV que vous cherchez, vous pouvez demander à " . 
-                    User::where('role', Roles::EmployedPrivilegedTutor->value)
+        $tutors = User::where('role', Roles::EmployedPrivilegedTutor->value)
                     ->get()
                     ->map(fn ($user) => "{$user->firstName} {$user->lastName}")
-                    ->join(' ou ')
-                . ' de l\'ajouter')
+                    ->join(' ou ');
+
+        return $form->schema([
+            Forms\Components\Section::make(__('resources.pages.tutor_manage_uvs.sections.propose_uv.title'))
+                ->description(trans('resources.pages.tutor_manage_uvs.sections.propose_uv.description', ['tutors' => $tutors]))
                 ->schema([
                     Forms\Components\Select::make('selected_codes')
-                        ->label('UV existante')
+                        ->label(__('resources.pages.tutor_manage_uvs.fields.selected_codes'))
                         ->options(
                             \App\Models\UV::whereNotIn('code', Auth::user()->proposedUvs()->pluck('code'))
                             ->get()
@@ -135,18 +148,18 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
                         ->requiredWithout(['code', 'intitule']),
                 ]),
         
-            Forms\Components\Section::make('OU créer une nouvelle UV')
-                ->description('Créez une nouvelle UV avec son code et son intitulé')
+            Forms\Components\Section::make(__('resources.pages.tutor_manage_uvs.sections.create_new_uv.title'))
+                ->description(__('resources.pages.tutor_manage_uvs.sections.create_new_uv.description'))
                 ->schema([
                     Forms\Components\TextInput::make('code')
-                    ->label("Code de l'UV")
+                    ->label(__('resources.pages.tutor_manage_uvs.fields.code'))
                     ->maxLength(10)
                     ->reactive()
                     ->afterStateUpdated(fn () => $this->updateCanSaveUv())
                     ->requiredWithout('selected_codes'),
             
                     Forms\Components\TextInput::make('intitule')
-                    ->label("Intitulé de l'UV")
+                    ->label(__('resources.pages.tutor_manage_uvs.fields.intitule'))
                     ->maxLength(255)
                     ->reactive()
                     ->afterStateUpdated(fn () => $this->updateCanSaveUv())
@@ -178,9 +191,9 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
             Auth::user()->proposedUvs()->syncWithoutDetaching($data['selected_codes']);
 
             Notification::make()
-                ->title('UV(s) ajoutée(s)')
+                ->title(__('resources.pages.tutor_manage_uvs.notifications.uvs_added_title'))
                 ->success()
-                ->body('Vos UVs ont été mises à jour avec succès.')
+                ->body(__('resources.pages.tutor_manage_uvs.notifications.uvs_added_body'))
                 ->send();
         } elseif (!empty($data['code']) && !empty($data['intitule'])) {
             $uv = UV::firstOrCreate(
@@ -191,9 +204,9 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
             Auth::user()->proposedUvs()->syncWithoutDetaching([$uv->code]);
 
             Notification::make()
-                ->title('UV(s) ajoutée(s)')
+                ->title(__('resources.pages.tutor_manage_uvs.notifications.uvs_created_title'))
                 ->success()
-                ->body("L'UV a été créé et vos UVs ont été mises à jour avec succès.")
+                ->body(__('resources.pages.tutor_manage_uvs.notifications.uvs_created_body'))
                 ->send();
         }
 

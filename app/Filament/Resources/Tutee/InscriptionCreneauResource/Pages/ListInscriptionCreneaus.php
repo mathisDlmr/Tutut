@@ -72,7 +72,7 @@ class ListInscriptioncreneaus extends ListRecords
         $tabs = [];
         
         if ($currentWeek) {
-            $tabs["semaine-{$currentWeek->id}"] = Tab::make("Semaine actuelle ({$currentWeek->numero})")
+            $tabs["semaine-{$currentWeek->id}"] = Tab::make(__('resources.inscription_creneau.semaine_actuelle')." ({$currentWeek->numero})")
                 ->badge(fn() => Creneaux::where('fk_semaine', $currentWeek->id)
                     ->where('end', '>', Carbon::now())
                     ->where(function ($query) {
@@ -95,7 +95,7 @@ class ListInscriptioncreneaus extends ListRecords
                     ->first();
                     
                 if ($nextWeek) {
-                    $tabs["semaine-{$nextWeek->id}"] = Tab::make("Semaine prochaine ({$nextWeek->numero})")
+                    $tabs["semaine-{$nextWeek->id}"] = Tab::make(__('resources.inscription_creneau.semaine_prochaine')." ({$nextWeek->numero})")
                         ->badge(fn() => Creneaux::where('fk_semaine', $nextWeek->id)
                             ->where(function ($query) {
                                 $query->whereNotNull('tutor1_id')
