@@ -111,7 +111,6 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
         
         // Si on utilise "la veille", on vide les champs minTimeCancellation
         if ($data['useOneDayBeforeCancellation']) {
-            $this->settings['minTimeCancellationDay'] = null;
             $this->settings['minTimeCancellationTime'] = null;
         }
         
@@ -179,19 +178,10 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
                                         ->inline(false)
                                         ->columnSpan('full'),
                                         
-                                    Forms\Components\Grid::make()
-                                        ->schema([
-                                            Select::make('minTimeCancellationDay')
-                                                ->label(__('resources.pages.settings.fields.day'))
-                                                ->options($this->getDays())
-                                                ->required(),
-                                            TimePicker::make('minTimeCancellationTime')
-                                                ->label(__('resources.pages.settings.fields.time'))
-                                                ->seconds(false)
-                                                ->required(),
-                                        ])
-                                        ->columnSpan('full')
-                                        ->columns(2)
+                                    TimePicker::make('minTimeCancellationTime')
+                                        ->label(__('resources.pages.settings.fields.time_before'))
+                                        ->seconds(false)
+                                        ->required()
                                         ->hidden(fn (callable $get) => $get('useOneDayBeforeCancellation')),
                                 ])
                                 ->columnSpan(1)

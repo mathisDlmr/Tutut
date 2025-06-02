@@ -459,6 +459,7 @@ return [
                 'day' => 'Jour',
                 'time' => 'Heure',
                 'one_day_before' => 'Limiter à "la veille" uniquement',
+                'time_before' => 'Délai maximal avant un créneau pour annuler',
                 'code' => 'UV',
                 'intitule' => 'Intitulé',
             ],
