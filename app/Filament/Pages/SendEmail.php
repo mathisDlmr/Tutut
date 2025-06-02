@@ -48,6 +48,11 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
         return __('resources.pages.send_email.title');
     }
 
+    public static function getNavigationLabel(): string 
+    {
+        return __('resources.pages.send_email.title');
+    }
+
     public static function getNavigationGroup(): string
     {
         return __('resources.pages.send_email.navigation_group');

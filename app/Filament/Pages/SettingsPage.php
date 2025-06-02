@@ -81,6 +81,11 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
         return __('resources.pages.settings.title');
     }
 
+    public static function getNavigationLabel(): string 
+    {
+        return __('resources.pages.settings.title');
+    }
+
     public static function canAccess(): bool
     {
         $user = Auth::user();
