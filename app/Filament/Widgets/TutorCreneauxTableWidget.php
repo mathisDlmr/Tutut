@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 class TutorCreneauxTableWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
+    protected static ?string $heading = 'Prochains créneaux en tuteur.ice';
 
     public static function canView(): bool
     {
@@ -36,11 +37,6 @@ class TutorCreneauxTableWidget extends BaseWidget
             Roles::EmployedTutor->value,
             Roles::EmployedPrivilegedTutor->value,
         ]);
-    }
-    
-    public function getHeading(): string
-    {
-        return __('resources.widgets.tutor_creneaux.heading');
     }
 
     protected function getTableQuery(): \Illuminate\Database\Eloquent\Builder

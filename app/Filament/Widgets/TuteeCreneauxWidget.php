@@ -25,16 +25,12 @@ use Illuminate\Support\Facades\Auth;
 class TuteeCreneauxWidget extends BaseWidget
 {
     protected int|string|array $columnSpan = 'full';
+    protected static ?string $heading = 'Prochains créneaux de tutorat';
 
     public static function canView(): bool
     {
         $user = Auth::user();
         return $user->role !== Roles::Administrator->value;
-    }
-
-    public function getHeading(): string
-    {
-        return __('resources.widgets.tutee_creneaux.heading');
     }
 
     protected function getTableQuery(): \Illuminate\Database\Eloquent\Builder
