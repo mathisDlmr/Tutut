@@ -43,7 +43,7 @@ class SendEmail extends Page implements Forms\Contracts\HasForms
     public $canPreviewEmailFlag = false;
     public $canSaveTemplateFlag = false;
 
-    public static function getNavigationLabel(): string
+    public function getTitle(): string
     {
         return __('resources.pages.send_email.title');
     }

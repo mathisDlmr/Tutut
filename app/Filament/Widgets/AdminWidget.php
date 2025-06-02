@@ -8,6 +8,8 @@ use Filament\Widgets\StatsOverviewWidget;
 use App\Models\Creneaux;
 use App\Models\Inscription;
 use App\Models\Comptabilite;
+use App\Models\Semestre;
+use App\Models\Semaine;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -38,21 +40,33 @@ class AdminWidget extends StatsOverviewWidget
 
     protected function getStats(): array
     {
+        $semestreActif = Semestre::where('is_active', true)->first();
+        if (!$semestreActif) {
+            return [];
+        }
+
         $creneauxAvecInscriptions = Creneaux::withCount('inscriptions')
+            ->whereBetween('start', [$semestreActif->debut, $semestreActif->fin])
             ->whereHas('inscriptions')
             ->get();
 
         $totalInscriptions = $creneauxAvecInscriptions->sum('inscriptions_count');
         $totalCreneauxAvecInscrits = $creneauxAvecInscriptions->count();
 
-        $moyenneParSoir = $creneauxAvecInscriptions
+        $creneauxSoir = $creneauxAvecInscriptions->filter(function ($creneau) {
+            return $creneau->start->format('H:i:s') > '18:00:00';
+        });
+
+        $moyenneParSoir = $creneauxSoir
             ->groupBy(fn ($creneau) => $creneau->start->format('Y-m-d'))
             ->map(fn ($dayCreneaux) => $dayCreneaux->sum('inscriptions_count'))
             ->avg();
 
         $moyenneParCreneau = $totalCreneauxAvecInscrits > 0 ? $totalInscriptions / $totalCreneauxAvecInscrits : 0;
 
-        $nbTutorésUniques = Inscription::distinct('tutee_id')->count();
+        $nbTutorésUniques = Inscription::whereHas('creneau', function ($query) use ($semestreActif) {
+            $query->whereBetween('start', [$semestreActif->debut, $semestreActif->fin]);
+        })->distinct('tutee_id')->count();
 
         $creneauxParSemaine = Creneaux::where('open', true)
             ->where('tutor1_id', '!=', null)
@@ -63,18 +77,24 @@ class AdminWidget extends StatsOverviewWidget
 
         $nbTuteursBénévoles = User::where('role', 'tutor')->count();
 
-        $heuresTotales = Comptabilite::whereHas('user', function ($q) {
-            $q->whereIn('role', ['tutor', 'employedTutor', 'employedPrivilegedTutor']);
-        })->get()->sum('nb_heures');
+        $semaineIds = Semaine::where('fk_semestre', $semestreActif->code)->pluck('id');
 
-        $topUVs = Inscription::get()
-            ->flatMap(fn ($inscription) => json_decode($inscription->enseignements_souhaites ?? '[]'))
-            ->filter()
-            ->countBy()
-            ->sortDesc()
-            ->take(5)
-            ->map(fn ($count, $code) => "$code ($count)")
-            ->implode(', ');
+        $heuresTotales = Comptabilite::whereIn('fk_semaine', $semaineIds)
+            ->whereHas('user', function ($q) {
+                $q->whereIn('role', ['tutor', 'employedTutor', 'employedPrivilegedTutor']);
+            })
+            ->sum('nb_heures');
+
+        $topUVs = Inscription::whereHas('creneau', function ($query) use ($semestreActif) {
+            $query->whereBetween('start', [$semestreActif->debut, $semestreActif->fin]);
+        })->get()
+        ->flatMap(fn ($inscription) => json_decode($inscription->enseignements_souhaites ?? '[]'))
+        ->filter()
+        ->countBy()
+        ->sortDesc()
+        ->take(5)
+        ->map(fn ($count, $code) => "$code ($count)")
+        ->implode(', ');
 
         return [
             Stat::make(__('resources.widgets.admin.stats.avg_tutees_per_night'), number_format($moyenneParSoir, 1)),
