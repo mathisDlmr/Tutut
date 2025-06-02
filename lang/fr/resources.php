@@ -74,6 +74,7 @@ return [
         'label' => 'Inscription Créneau',
         'plural_label' => 'Inscriptions Créneaux',
         'navigation_label' => 'Inscriptions Tutorat',
+        'semaine' => 'Semaine',
         'semaine_actuelle' => 'Semaine actuelle',
         'semaine_prochaine' => 'Semaine prochaine',
         'modal_heading' => 'Liste des inscrit.e.s',

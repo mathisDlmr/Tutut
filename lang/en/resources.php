@@ -74,6 +74,7 @@ return [
         'label' => 'Time Slot Registration',
         'plural_label' => 'Time Slot Registrations',
         'navigation_label' => 'Tutoring Registrations',
+        'semaine' => 'Week',
         'semaine_actuelle' => 'Current week',
         'semaine_prochaine' => 'Next Week',
         'modal_heading' => 'List of registrants',

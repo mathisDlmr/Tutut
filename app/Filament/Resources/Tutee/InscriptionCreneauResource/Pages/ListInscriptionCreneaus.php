@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Tutee\InscriptionCreneauResource\Pages;
 use App\Filament\Resources\Tutee\InscriptionCreneauResource;
 use App\Models\Creneaux;
 use App\Models\Semaine;
+use App\Models\Semestre;
+use App\Enums\Roles;
 use Carbon\Carbon;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
@@ -103,6 +105,36 @@ class ListInscriptioncreneaus extends ListRecords
      */
     public function getTabs(): array
     {
+        if(Auth::user()->role === Roles::Administrator->value) {
+            $semestreId = Semestre::where('is_active', true)
+                ->first()
+                ->code;
+
+            $weeks = Semaine::where('fk_semestre', $semestreId)
+                ->orderBy('numero', 'desc')
+                ->get();
+
+            foreach ($weeks as $week) {
+                $tabs["semaine-{$week->id}"] = Tab::make(__('resources.inscription_creneau.semaine')." {$week->numero}")
+                    ->badge(fn() => Creneaux::where('fk_semaine', $week->id)
+                        ->where('end', '>', Carbon::now())
+                        ->where(function ($query) {
+                            $query->whereNotNull('tutor1_id')
+                                ->orWhereNotNull('tutor2_id');
+                        })
+                        ->count())
+                    ->modifyQueryUsing(function (Builder $query) use ($week) {
+                        return $query->where('fk_semaine', $week->id)
+                            ->where('end', '>', Carbon::now())
+                            ->where(function ($query) {
+                                $query->whereNotNull('tutor1_id')
+                                    ->orWhereNotNull('tutor2_id');
+                            });
+                    });
+            }
+            return $tabs;
+        }
+
         $userId = Auth::id();
         $showNextWeek = $this->shouldShowCurrentAndNextWeek();
         
