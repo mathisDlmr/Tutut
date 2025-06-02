@@ -323,7 +323,8 @@ class InscriptionCreneauResource extends Resource
                             ->icon('heroicon-o-user-group')
                             ->color('gray')
                             ->getStateUsing(function (Creneaux $record) {
-                                $max = ($record->tutor2_id && $record->tutor1_id) ? 15 : 6;
+                                $settings = self::getSettings();
+                                $max = ($record->tutor2_id && $record->tutor1_id) ? (intval($settings['maxStudentFor2Tutors']) ?? 15) : (intval($settings['maxStudentFor1Tutor']) ?? 6);
                                 return "{$record->inscriptions_count} / $max";
                             }),
                     ]),
@@ -380,7 +381,8 @@ class InscriptionCreneauResource extends Resource
                             ->maxItems(3),
                     ])                    
                     ->visible(function (Creneaux $record) use ($userId) {
-                        $max = ($record->tutor1_id && $record->tutor2_id) ? 15 : 6;
+                        $settings = self::getSettings();
+                        $max = ($record->tutor1_id && $record->tutor2_id) ? (intval($settings['maxStudentFor2Tutors']) ?? 15) : (intval($settings['maxStudentFor1Tutor']) ?? 6);
                         return !$record->inscriptions->contains('tutee_id', $userId)
                             && $record->inscriptions_count < $max
                             && Auth::user()->role !== Roles::Administrator->value

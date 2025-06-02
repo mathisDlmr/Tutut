@@ -453,6 +453,9 @@ return [
                 'tutor_registration' => "Registration opening date for volunteer tutors",
                 'tutee_registration' => "Registration opening date for tutees",
                 'cancellation_delay' => "Cancellation deadline for slots",
+                'max_student_per_tutor' => 'Maximum number of students per tutor',
+                'maxStudentFor1Tutor' => 'Maximum number of students for 1 tutor',
+                'maxStudentFor2Tutors' => 'Maximum number of students for 2 tutors',
                 'uv_catalog' => 'Course Catalog',
             ],
             'fields' => [

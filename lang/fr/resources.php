@@ -453,6 +453,7 @@ return [
                 'tutor_registration' => "Date d'ouverture des inscriptions pour les tuteur.ice.s bénévoles",
                 'tutee_registration' => "Date d'ouverture des inscriptions pour les tutoré.e.s",
                 'cancellation_delay' => "Délai d'annulation des créneaux",
+                'max_student_per_tutor' => "Nombre maximum d'élèves par tuteur",
                 'uv_catalog' => 'Catalogue des UVs',
             ],
             'fields' => [
@@ -460,6 +461,8 @@ return [
                 'time' => 'Heure',
                 'one_day_before' => 'Limiter à "la veille" uniquement',
                 'time_before' => 'Délai maximal avant un créneau pour annuler',
+                'max_student_for_1_tutor' => "Nombre maximum d'élèves pour 1 tuteur",
+                'max_student_for_2_tutors' => "Nombre maximum d'élèves pour 2 tuteurs",
                 'code' => 'UV',
                 'intitule' => 'Intitulé',
             ],

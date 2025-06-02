@@ -47,9 +47,10 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
     public $tutorRegistrationTime;
     public $tuteeRegistrationDay;
     public $tuteeRegistrationTime;
-    public $minTimeCancellationDay;
     public $minTimeCancellationTime;
     public $useOneDayBeforeCancellation = false;
+    public $maxStudentFor1Tutor;
+    public $maxStudentFor2Tutors;
 
     protected $settings = [
         'employedTutorRegistrationDay' => null,
@@ -58,9 +59,10 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
         'tutorRegistrationTime' => null,
         'tuteeRegistrationDay' => null,
         'tuteeRegistrationTime' => null,
-        'minTimeCancellationDay' => null,
         'minTimeCancellationTime' => null,
         'useOneDayBeforeCancellation' => false,
+        'maxStudentFor1Tutor' => null,
+        'maxStudentFor2Tutors' => null,
     ];
     
     protected function getDays(): array
@@ -188,6 +190,21 @@ class SettingsPage extends Page implements Tables\Contracts\HasTable, Forms\Cont
                                         ->seconds(false)
                                         ->required()
                                         ->hidden(fn (callable $get) => $get('useOneDayBeforeCancellation')),
+                                ])
+                                ->columnSpan(1)
+                                ->compact(),
+                            Section::make(__('resources.pages.settings.sections.max_student_per_tutor'))
+                                ->schema([
+                                    Forms\Components\TextInput::make('maxStudentFor1Tutor')
+                                        ->label(__('resources.pages.settings.fields.max_student_for_1_tutor'))
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->required(),
+                                    Forms\Components\TextInput::make('maxStudentFor2Tutors')
+                                        ->label(__('resources.pages.settings.fields.max_student_for_2_tutors'))
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->required(),
                                 ])
                                 ->columnSpan(1)
                                 ->compact(),
