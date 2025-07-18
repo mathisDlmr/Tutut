@@ -1,5 +1,3 @@
-FROM ghcr.io/mathisDlmr/tutut:latest as app
-
 FROM php:8.2-fpm-alpine
 
 RUN apk add --no-cache \
@@ -20,7 +18,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY --from=app /var/www/html /var/www/html
+COPY . /var/www/html
 
 COPY laravel-setup.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
