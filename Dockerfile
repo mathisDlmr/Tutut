@@ -1,4 +1,4 @@
-FROM ghcr.io/mathisDlmr/tutut:latest as app
+FROM ghcr.io/mathisdlmr/tutut:latest as app
 
 FROM php:8.2-fpm-alpine
 
