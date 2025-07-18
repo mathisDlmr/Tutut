@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   php:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/mathisDlmr/tutut:latest
     container_name: tutut
     ports:
       - "8000:8000"
