@@ -2,17 +2,23 @@ FROM php:8.2-fpm-alpine
 
 RUN apk add --no-cache \
     bash \
-    libzip-dev \
     zip \
     unzip \
     sqlite \
-    oniguruma-dev \
+    sqlite-dev \
     curl \
     git \
     icu-dev \
     libxml2-dev \
+    oniguruma-dev \
+    libzip-dev \
+    zlib-dev \
+    build-base \
+    g++ \
+    make \
+    autoconf \
     supervisor \
-    && docker-php-ext-install pdo pdo_sqlite intl xml
+ && docker-php-ext-install pdo pdo_sqlite intl xml
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
