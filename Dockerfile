@@ -13,12 +13,20 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libzip-dev \
     zlib-dev \
+    mysql-client \
     build-base \
     g++ \
     make \
     autoconf \
-    supervisor \
- && docker-php-ext-install pdo pdo_sqlite intl xml
+    supervisor
+
+RUN docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    pdo_sqlite \
+    intl \
+    xml \
+    zip
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
