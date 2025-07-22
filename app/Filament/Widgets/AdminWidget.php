@@ -68,8 +68,7 @@ class AdminWidget extends StatsOverviewWidget
             $query->whereBetween('start', [$semestreActif->debut, $semestreActif->fin]);
         })->distinct('tutee_id')->count();
 
-        $creneauxParSemaine = Creneaux::where('open', true)
-            ->where('tutor1_id', '!=', null)
+        $creneauxParSemaine = Creneaux::where('tutor1_id', '!=', null)
             ->orWhere('tutor2_id', '!=', null)
             ->get()
             ->groupBy(fn ($creneau) => optional($creneau->semaine)->numero)
