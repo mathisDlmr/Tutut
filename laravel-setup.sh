@@ -14,6 +14,9 @@ php artisan view:cache --no-interaction
 php artisan event:cache --no-interaction
 php artisan optimize --no-interaction
 
-chown -R nobody:nobody /var/www/html/storage/app/public/documents /var/www/html/storage/logs
+mkdir -p /var/www/html/storage/app/public/documents
+mkdir -p /var/www/html/storage/logs
+
+php artisan migrate --force
 
 exec php-fpm

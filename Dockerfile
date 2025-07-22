@@ -1,38 +1,27 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache \
     bash \
-    zip \
-    unzip \
-    sqlite \
-    sqlite-dev \
-    curl \
-    git \
-    icu-dev \
-    libxml2-dev \
-    oniguruma-dev \
-    libzip-dev \
-    zlib-dev \
-    mysql-client \
-    build-base \
-    g++ \
-    make \
-    autoconf \
-    supervisor
+    zip unzip \
+    sqlite sqlite-dev \
+    curl git \
+    icu-dev libxml2-dev \
+    oniguruma-dev libzip-dev zlib-dev \
+    mysql-client build-base g++ make autoconf \
+    supervisor \
+    gd libpng-dev libjpeg-turbo-dev freetype-dev
 
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    pdo_sqlite \
-    intl \
-    xml \
-    zip
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install \
+    pdo pdo_mysql mysqli pdo_sqlite \
+    intl xml zip gd
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY . /var/www/html
+COPY . .
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 COPY laravel-setup.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
