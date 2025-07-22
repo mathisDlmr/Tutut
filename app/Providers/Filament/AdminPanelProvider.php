@@ -24,6 +24,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -53,11 +54,18 @@ class AdminPanelProvider extends PanelProvider
                 ->renderHook('panels::topbar.end');
         });
 
+        if (Schema::hasTable('semestres')) {
+            $actif = Semestre::where('is_active', true)->first();
+            $semestreActif = $actif?->code;
+        } else {
+            $semestreActif = null;
+        }
+        
         return $panel
             ->default()
             ->id('tutut')
-            ->path('/tutut')
-            ->brandName("Tut'ut - ".Semestre::where('is_active', true)->first()->code)
+            ->path('/')
+            ->brandName("Tut'ut - ".$semestreActif)
             ->colors([
                 'primary' => Color::Blue,
             ])
