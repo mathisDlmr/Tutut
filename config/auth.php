@@ -3,6 +3,7 @@
 return [
 
     'app_no_login' => env('APP_NO_LOGIN', false),
+    'auto_user_id' => env('USER_ID', 1),
 
     'oauth' => [
         'client_id' => env('OAUTH_CLIENT_ID'),
