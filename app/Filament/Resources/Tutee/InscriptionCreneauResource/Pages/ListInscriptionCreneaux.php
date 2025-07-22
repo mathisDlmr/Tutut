@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Storage;
  * peuvent s'inscrire, organisés en onglets par semaine et avec
  * des règles d'accès basées sur la date d'ouverture des inscriptions.
  */
-class ListInscriptioncreneaus extends ListRecords
+class ListInscriptionCreneaux extends ListRecords
 {
     protected static string $resource = InscriptionCreneauResource::class;
     
@@ -106,14 +106,15 @@ class ListInscriptioncreneaus extends ListRecords
     public function getTabs(): array
     {
         if(Auth::user()->role === Roles::Administrator->value) {
-            $semestreId = Semestre::where('is_active', true)
-                ->first()
-                ->code;
+            $semestreId = Semestre::where('is_active', true)->first()?->code;
 
-            $weeks = Semaine::where('fk_semestre', $semestreId)
-                ->orderBy('numero', 'desc')
-                ->get();
+            $weeks = $semestreId 
+                ? Semaine::where('fk_semestre', $semestreId)
+                    ->orderBy('numero', 'desc')
+                    ->get()
+                : collect();
 
+            $tabs = [];
             foreach ($weeks as $week) {
                 $tabs["semaine-{$week->id}"] = Tab::make(__('resources.inscription_creneau.semaine')." {$week->numero}")
                     ->badge(fn() => Creneaux::where('fk_semaine', $week->id)
@@ -135,7 +136,6 @@ class ListInscriptioncreneaus extends ListRecords
             return $tabs;
         }
 
-        $userId = Auth::id();
         $showNextWeek = $this->shouldShowCurrentAndNextWeek();
         
         $currentWeek = Semaine::where('date_debut', '<=', Carbon::now())
@@ -143,7 +143,7 @@ class ListInscriptioncreneaus extends ListRecords
             ->first();
             
         $tabs = [];
-        
+
         if ($currentWeek) {
             $tabs["semaine-{$currentWeek->id}"] = Tab::make(__('resources.inscription_creneau.semaine_actuelle')." ({$currentWeek->numero})")
                 ->badge(fn() => Creneaux::where('fk_semaine', $currentWeek->id)

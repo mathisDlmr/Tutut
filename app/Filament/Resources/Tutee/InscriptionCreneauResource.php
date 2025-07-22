@@ -458,7 +458,7 @@ class InscriptionCreneauResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListInscriptionCreneaus::route('/'),
+            'index' => Pages\ListInscriptionCreneaux::route('/'),
         ];
     }
     
