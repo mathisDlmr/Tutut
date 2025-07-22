@@ -1,20 +1,16 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm
 
-RUN apk add --no-cache \
-    bash \
-    zip unzip \
-    sqlite sqlite-dev \
-    curl git \
-    icu-dev libxml2-dev \
-    oniguruma-dev libzip-dev zlib-dev \
-    mysql-client build-base g++ make autoconf \
-    supervisor \
-    gd libpng-dev libjpeg-turbo-dev freetype-dev
-
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install \
-    pdo pdo_mysql mysqli pdo_sqlite \
-    intl xml zip gd
+RUN apt-get update && apt-get install -y \
+    zip unzip git curl \
+    libicu-dev libxml2-dev \
+    libzip-dev zlib1g-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libsqlite3-dev libmariadb-dev \
+    g++ make autoconf \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+        intl pdo pdo_mysql mysqli pdo_sqlite \
+        xml zip gd
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -26,7 +22,8 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 COPY laravel-setup.sh /usr/local/bin/laravel-setup.sh
 RUN chmod +x /usr/local/bin/laravel-setup.sh
 
-RUN addgroup -g 1000 www && adduser -u 1000 -G www -s /bin/sh -D www \
+RUN addgroup --gid 1000 www \
+    && adduser --uid 1000 --ingroup www --shell /bin/bash --disabled-password www \
     && chown -R www:www . \
     && chmod -R 775 storage bootstrap/cache
 
