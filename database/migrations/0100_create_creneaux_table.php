@@ -18,7 +18,8 @@ return new class extends Migration
             $table->boolean('tutor1_compted')->nullable(); // null = non traité, true/false sinon
             $table->boolean('tutor2_compted')->nullable();
             $table->foreignId('fk_semaine')->constrained('semaines', 'id')->onDelete('cascade');
-            $table->foreignId('fk_salle')->constrained('salles', 'numero');
+            $table->string('fk_salle', 4);
+            $table->foreign('fk_salle')->references('numero')->on('salles')->onDelete('cascade');
             $table->dateTime('start');
             $table->dateTime('end');
             $table->timestamps();

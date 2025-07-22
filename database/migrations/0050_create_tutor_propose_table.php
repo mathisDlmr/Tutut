@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('tutor_propose', function (Blueprint $table) {
             $table->id();
             $table->foreignId('fk_user')->constrained('users', 'id');
-            $table->foreignId('fk_code')->constrained('uvs', 'code');
+            $table->string('fk_code', 4);
+            $table->foreign('fk_code')->references('code')->on('uvs')->onDelete('cascade');
             $table->timestamps();
         });        
     }
