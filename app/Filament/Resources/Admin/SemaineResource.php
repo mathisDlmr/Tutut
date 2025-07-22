@@ -211,8 +211,14 @@ class SemaineResource extends Resource
                     ->label(__('resources.admin.semaine.fields.is_vacances'))
                     ->formatStateUsing(fn (bool $state) => $state ? __('resources.admin.semestre.values.oui') : __('resources.admin.semestre.values.non')),
             ])
-            ->query(Semaine::query()->where('fk_semestre', Semestre::where('is_active', true)->first()->code))
-            ->filters([
+            ->query(fn () =>
+                Semaine::query()
+                    ->when(
+                        $semestre = Semestre::where('is_active', true)->first(),
+                        fn ($query) => $query->where('fk_semestre', $semestre->code)
+                    )
+            )
+           ->filters([
                 Tables\Filters\Filter::make('future')
                     ->label(__('resources.admin.semaine.filters.future'))
                     ->query(fn (Builder $query) => $query->where('date_fin', '>', now()))
@@ -391,6 +397,7 @@ class SemaineResource extends Resource
                             'fk_salle' => $salleNumero,
                             'start' => $start,
                             'end' => $end,
+                            'day_and_time' => $start->format('Y-m-d') . '_' . $start->format('H:i'),
                         ]);
                     }
                 }

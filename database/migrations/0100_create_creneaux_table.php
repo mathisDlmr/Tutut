@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreign('fk_salle')->references('numero')->on('salles')->onDelete('cascade');
             $table->dateTime('start');
             $table->dateTime('end');
+            $table->string('day_and_time')->nullable();
             $table->timestamps();
         });
     }
