@@ -54,11 +54,12 @@ class AdminPanelProvider extends PanelProvider
                 ->renderHook('panels::topbar.end');
         });
 
-        if (Schema::hasTable('semestres')) {
-            $actif = Semestre::where('is_active', true)->first();
-            $semestreActif = $actif?->code;
-        } else {
-            $semestreActif = null;
+        $semestreActif = null;
+        if (!app()->runningInConsole()) {
+            if (Schema::hasTable('semestres')) {
+                $actif = Semestre::where('is_active', true)->first();
+                $semestreActif = $actif?->code;
+            }
         }
         
         return $panel
