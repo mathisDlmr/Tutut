@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('heures_supplementaires', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('semaine_id')->constrained('semaines')->onDelete('cascade');
+            $table->foreignId('fk_user')->constrained('users')->onDelete('cascade');
+            $table->foreignId('fk_semaine')->constrained('semaines')->onDelete('cascade');
             $table->float('nb_heures');
             $table->text('commentaire');
             $table->timestamps();
