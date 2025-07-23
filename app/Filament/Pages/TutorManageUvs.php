@@ -238,6 +238,11 @@ class TutorManageUvs extends Page implements Forms\Contracts\HasForms, Tables\Co
                     ->action(function (UV $record) {
                         Auth::user()->proposedUvs()->detach($record->code);
                     }),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }
