@@ -110,7 +110,45 @@ class InscriptionCreneauResource extends Resource
             })
             ->values()
             ->join("\n");
-    }    
+    }   
+    
+    /**
+     * Balance les éléments horizontalement dans une ligne
+     * 
+     * Cette méthode permet de réaliser un affichage de texte avec des éléments
+     * qui doivent être affichés horizontalement, mais qui ne peuvent pas être
+     * affichés tous en une seule ligne.
+     * 
+     * @param array $items Tableau d'éléments à afficher
+     * @param int $maxCharsPerLine Nombre de caractères maximum par ligne
+     * @return array Tableau d'éléments répartis sur plusieurs lignes
+     */
+    public static function balanceHorizontally(array $items, int $maxCharsPerLine): array
+    {
+        $lines = [];
+        $currentLine = [];
+        $currentLength = 0;
+
+        foreach ($items as $item) {
+            $itemLength = strlen($item);
+
+            if ($currentLength + $itemLength + count($currentLine) * 2 > $maxCharsPerLine) {
+                // Si dépasse, on ferme la ligne et commence une nouvelle
+                $lines[] = $currentLine;
+                $currentLine = [];
+                $currentLength = 0;
+            }
+
+            $currentLine[] = $item;
+            $currentLength += $itemLength;
+        }
+
+        if (!empty($currentLine)) {
+            $lines[] = $currentLine;
+        }
+
+        return $lines;
+    }
 
     /**
      * Récupère les paramètres généraux depuis le fichier de configuration
@@ -169,7 +207,7 @@ class InscriptionCreneauResource extends Resource
      * @param Creneaux $creneau Le créneau dont on veut vérifier la possibilité d'annulation
      * @return bool Vrai si l'annulation est possible
      */
-    protected static function canCancelInscription(Creneaux $creneau): bool
+    protected static function canChange(Creneaux $creneau): bool
     {
         $settings = self::getSettings();
 
@@ -181,7 +219,7 @@ class InscriptionCreneauResource extends Resource
         // Si on utilise la règle "pas d'annulation le jour même"
         if (($settings['useOneDayBeforeCancellation'] ?? false) && 
             $now->format('Y-m-d') === $creneau->start->format('Y-m-d')) {
-            return false;
+                return false;
         }
         
         // Si on a une durée minimale avant le créneau
@@ -284,7 +322,7 @@ class InscriptionCreneauResource extends Resource
                                         default => null,
                                     };
                                 })->filter()->implode(' ');
-                                return $state . ($flags ? " {$flags}" : '');
+                                return $state . ' ' .($record->tutor1->lastName)[0].'.' . ($flags ? " {$flags}" : '');
                             }),
 
                         TextColumn::make('tutor2.firstName')
@@ -309,7 +347,7 @@ class InscriptionCreneauResource extends Resource
                                         default => null,
                                     };
                                 })->filter()->implode(' ');
-                                return $state . ($flags ? " {$flags}" : '');
+                                return $state . ' ' .($record->tutor2->lastName)[0].'.' . ($flags ? " {$flags}" : '');  
                             }),
                     ]),
 
@@ -324,7 +362,9 @@ class InscriptionCreneauResource extends Resource
                             ->color('gray')
                             ->getStateUsing(function (Creneaux $record) {
                                 $settings = self::getSettings();
-                                $max = ($record->tutor2_id && $record->tutor1_id) ? (intval($settings['maxStudentFor2Tutors']) ?? 15) : (intval($settings['maxStudentFor1Tutor']) ?? 6);
+                                $max = ($record->tutor1_id && $record->tutor2_id)
+                                    ? (isset($settings['maxStudentFor2Tutors']) ? intval($settings['maxStudentFor2Tutors']) : 15)
+                                    : (isset($settings['maxStudentFor1Tutor']) ? intval($settings['maxStudentFor1Tutor']) : 6);
                                 return "{$record->inscriptions_count} / $max";
                             }),
                     ]),
@@ -333,28 +373,26 @@ class InscriptionCreneauResource extends Resource
                         ->label(__('resources.common.fields.uvs_proposees'))
                         ->formatStateUsing(function ($state, Creneaux $creneau) {
                             $uvs = collect();
-                    
+
                             foreach ([$creneau->tutor1, $creneau->tutor2] as $tutor) {
                                 if ($tutor) {
                                     $tutor->loadMissing('proposedUvs');
                                     $uvs = $uvs->merge($tutor->proposedUvs->pluck('code'));
                                 }
                             }
-                    
+
                             $grouped = self::formatGroupedUvs($uvs->unique());
-                    
-                            $lines = explode("\n", $grouped);
-                            $chunks = array_chunk($lines, ceil(count($lines) / 4));
-                    
-                            return '<div style="display: flex; gap: 1rem;">' .
-                                collect($chunks)->map(fn($col) =>
-                                    '<div style="flex:1;">' . implode('<br>', $col) . '</div>'
-                                )->implode('') .
-                            '</div>';
+                            $items = explode("\n", $grouped);
+
+                            $lines = self::balanceHorizontally($items, 35); // 35 caractères max/ligne
+
+                            return collect($lines)->map(function ($lineItems) {
+                                return implode('&nbsp;&nbsp;', $lineItems);
+                            })->implode('<br>');
                         })
                         ->icon('heroicon-o-academic-cap')
                         ->color('primary')
-                        ->html(),                                              
+                        ->html(),                                             
                 ])
             ])
             ->actions([
@@ -382,13 +420,21 @@ class InscriptionCreneauResource extends Resource
                     ])                    
                     ->visible(function (Creneaux $record) use ($userId) {
                         $settings = self::getSettings();
-                        $max = ($record->tutor1_id && $record->tutor2_id) ? (intval($settings['maxStudentFor2Tutors']) ?? 15) : (intval($settings['maxStudentFor1Tutor']) ?? 6);
+                        $max = ($record->tutor1_id && $record->tutor2_id)
+                            ? (isset($settings['maxStudentFor2Tutors']) ? intval($settings['maxStudentFor2Tutors']) : 15)
+                            : (isset($settings['maxStudentFor1Tutor']) ? intval($settings['maxStudentFor1Tutor']) : 6);
+                        $alreadySubscribed = Inscription::where('tutee_id', $userId)
+                            ->whereHas('creneau', function ($query) use ($record) {
+                                $query->where('start', $record->start);
+                            })->exists();
                         return !$record->inscriptions->contains('tutee_id', $userId)
                             && $record->inscriptions_count < $max
                             && Auth::user()->role !== Roles::Administrator->value
                             && Auth::id() !== $record->tutor1_id
                             && Auth::id() !== $record->tutor2_id
-                            && $record->end > Carbon::now();
+                            && $record->end > Carbon::now()
+                            && !$alreadySubscribed
+                            && self::canChange($record);
                     })
                     ->action(function (array $data, Creneaux $record) use ($userId) {
                         Inscription::create([
@@ -404,7 +450,7 @@ class InscriptionCreneauResource extends Resource
                     ->button()
                     ->visible(function (Creneaux $record) use ($userId) {
                         return $record->inscriptions->contains('tutee_id', $userId) && 
-                               self::canCancelInscription($record);
+                               self::canChange($record);
                     })
                     ->action(function (Creneaux $record) use ($userId) {
                         $record->inscriptions()->where('tutee_id', $userId)->delete();
