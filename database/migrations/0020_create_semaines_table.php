@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('semaines', function (Blueprint $table) {
             $table->id();
-            $table->unsignedTinyInteger('numero'); // 1 à 15
+            $table->string('numero'); // 1 à 15
             $table->string('fk_semestre', 3);
             $table->foreign('fk_semestre')->references('code')->on('semestres')->onDelete('cascade');
             $table->date('date_debut')->nullable();
