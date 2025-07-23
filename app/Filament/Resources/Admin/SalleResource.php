@@ -85,6 +85,8 @@ class SalleResource extends Resource
                 TextInput::make('numero')
                     ->label(__('resources.admin.salle.fields.numero'))
                     ->required()
+                    ->length(4)
+                    ->placeholder('A412')
                     ->unique(ignoreRecord: true),
     
                     Grid::make(2)
