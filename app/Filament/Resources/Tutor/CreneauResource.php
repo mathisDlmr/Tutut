@@ -15,6 +15,7 @@ use App\Enums\Roles;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Resource de gestion des créneaux pour les tuteurs
@@ -113,6 +114,66 @@ class CreneauResource extends Resource
     public function getHoraireCompletAttribute(): string
     {
         return $this->start->format('H:i') . ' - ' . $this->end->format('H:i');
+    }
+
+    /**
+     * Formate les codes d'UVs pour un affichage plus compact
+     * 
+     * Regroupe les codes d'UVs par préfixe pour optimiser l'affichage.
+     * Par exemple, "MT41, MT42, MT45" devient "MT41/42/45"
+     * 
+     * @param Collection $codes Collection des codes d'UVs à formater
+     * @return string Les codes formatés et regroupés
+     */
+    public static function formatGroupedUvs(Collection $codes): string
+    {
+        return $codes
+            ->sort()
+            ->groupBy(fn($code) => substr($code, 0, 2))
+            ->map(function ($group, $prefix) {
+                $suffixes = $group->map(fn($code) => substr($code, 2))->sort()->join('/');
+                return $prefix . $suffixes;
+            })
+            ->values()
+            ->join("\n");
+    } 
+
+    /**
+     * Balance les éléments horizontalement dans une ligne
+     * 
+     * Cette méthode permet de réaliser un affichage de texte avec des éléments
+     * qui doivent être affichés horizontalement, mais qui ne peuvent pas être
+     * affichés tous en une seule ligne.
+     * 
+     * @param array $items Tableau d'éléments à afficher
+     * @param int $maxCharsPerLine Nombre de caractères maximum par ligne
+     * @return array Tableau d'éléments répartis sur plusieurs lignes
+     */
+    public static function balanceHorizontally(array $items, int $maxCharsPerLine): array
+    {
+        $lines = [];
+        $currentLine = [];
+        $currentLength = 0;
+
+        foreach ($items as $item) {
+            $itemLength = strlen($item);
+
+            if ($currentLength + $itemLength + count($currentLine) * 2 > $maxCharsPerLine) {
+                // Si dépasse, on ferme la ligne et commence une nouvelle
+                $lines[] = $currentLine;
+                $currentLine = [];
+                $currentLength = 0;
+            }
+
+            $currentLine[] = $item;
+            $currentLength += $itemLength;
+        }
+
+        if (!empty($currentLine)) {
+            $lines[] = $currentLine;
+        }
+
+        return $lines;
     }
 
     /**
@@ -260,12 +321,14 @@ class CreneauResource extends Resource
                             ->label(__('resources.common.fields.tuteur1'))
                             ->icon('heroicon-o-user')
                             ->color('gray')
+                            ->formatStateUsing(fn($state, $record) => $state . ' ' .($record->tutor1->lastName)[0].'.')
                             ->placeholder(__('resources.common.placeholders.none')),
         
                         TextColumn::make('tutor2.firstName')
                             ->label(__('resources.common.fields.tuteur2'))
                             ->icon('heroicon-o-user')
                             ->color('gray')
+                            ->formatStateUsing(fn($state, $record) => $state . ' ' . ($record->tutor2->lastName)[0].'.')
                             ->placeholder(__('resources.common.placeholders.none')),
                     ]),
     
@@ -273,19 +336,26 @@ class CreneauResource extends Resource
                         ->label(__('resources.common.fields.uvs_proposees'))
                         ->formatStateUsing(function ($state, Creneaux $creneau) {
                             $uvs = collect();
-                    
-                            if ($creneau->tutor1 && $creneau->tutor1->proposedUvs) {
-                                $uvs = $uvs->merge($creneau->tutor1->proposedUvs->pluck('code'));
+
+                            foreach ([$creneau->tutor1, $creneau->tutor2] as $tutor) {
+                                if ($tutor) {
+                                    $tutor->loadMissing('proposedUvs');
+                                    $uvs = $uvs->merge($tutor->proposedUvs->pluck('code'));
+                                }
                             }
-                    
-                            if ($creneau->tutor2 && $creneau->tutor2->proposedUvs) {
-                                $uvs = $uvs->merge($creneau->tutor2->proposedUvs->pluck('code'));
-                            }
-                    
-                            return $uvs->unique()->sort()->implode(', ') ?: __('resources.common.placeholders.none');
+
+                            $grouped = self::formatGroupedUvs($uvs->unique());
+                            $items = explode("\n", $grouped);
+
+                            $lines = self::balanceHorizontally($items, 30); // 30 caractères max/ligne
+
+                            return collect($lines)->map(function ($lineItems) {
+                                return implode('&nbsp;&nbsp;', $lineItems);
+                            })->implode('<br>');
                         })
                         ->icon('heroicon-o-academic-cap')
-                        ->color('primary'),
+                        ->color('primary')
+                        ->html(),
                 ])
             ])
             ->contentGrid([
@@ -299,9 +369,21 @@ class CreneauResource extends Resource
                     ->label(fn(Creneaux $record) => $record->tutor1_id === $userId ? __('resources.common.buttons.se_desinscrire') : __('resources.common.buttons.shotgun_1'))
                     ->color(fn(Creneaux $record) => $record->tutor1_id === $userId ? 'danger' : 'primary')
                     ->button()
-                    ->visible(fn(Creneaux $record) =>
-                        ($record->tutor1_id === null && $record->tutor2_id !== $userId) || $record->tutor1_id === $userId
-                    )
+                    ->visible(function (Creneaux $record) use ($userId) {
+                        $hasConflict = Creneaux::where('start', $record->start)
+                            ->where('id', '!=', $record->id)
+                            ->where(function ($query) use ($userId) {
+                                $query->where('tutor1_id', $userId)
+                                    ->orWhere('tutor2_id', $userId);
+                            })
+                            ->exists();
+
+                        return !$hasConflict
+                            && (
+                                ($record->tutor1_id === null && $record->tutor2_id !== $userId)
+                                || $record->tutor1_id === $userId
+                            );
+                    })
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor1_id === $userId) {
                             $record->update(['tutor1_id' => null]);
@@ -314,9 +396,21 @@ class CreneauResource extends Resource
                     ->label(fn(Creneaux $record) => $record->tutor2_id === $userId ? __('resources.common.buttons.se_desinscrire') : __('resources.common.buttons.shotgun_2'))
                     ->color(fn(Creneaux $record) => $record->tutor2_id === $userId ? 'danger' : 'primary')
                     ->button()
-                    ->visible(fn(Creneaux $record) =>
-                        ($record->tutor2_id === null && $record->tutor1_id !== $userId) || $record->tutor2_id === $userId
-                    )
+                    ->visible(function (Creneaux $record) use ($userId) {
+                        $hasConflict = \App\Models\Creneaux::where('start', $record->start)
+                            ->where('id', '!=', $record->id)
+                            ->where(function ($query) use ($userId) {
+                                $query->where('tutor1_id', $userId)
+                                    ->orWhere('tutor2_id', $userId);
+                            })
+                            ->exists();
+
+                        return !$hasConflict
+                            && (
+                                ($record->tutor2_id === null && $record->tutor1_id !== $userId) 
+                                || $record->tutor2_id === $userId
+                            );
+                    })
                     ->action(function (Creneaux $record) use ($userId) {
                         if ($record->tutor2_id === $userId) {
                             $record->update(['tutor2_id' => null]);
