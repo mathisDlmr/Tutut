@@ -188,6 +188,8 @@ class TutorApplicationResource extends Resource
                                         ->title(__('resources.tutor_application.actions.accept.notification_title'))
                                         ->success()
                                         ->send();
+                                    
+                                    return redirect(request()->header('Referer'));
                                 })
                                 ->requiresConfirmation()
                                 ->modalHeading(__('resources.tutor_application.actions.accept.modal_heading'))
@@ -204,6 +206,8 @@ class TutorApplicationResource extends Resource
                                         ->title(__('resources.tutor_application.actions.reject.notification_title'))
                                         ->danger()
                                         ->send();
+
+                                    return redirect(request()->header('Referer'));
                                 })
                                 ->requiresConfirmation()
                                 ->modalHeading(__('resources.tutor_application.actions.reject.modal_heading'))
