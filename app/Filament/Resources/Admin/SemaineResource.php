@@ -154,7 +154,12 @@ class SemaineResource extends Resource
                         $semestre = Semestre::where('is_active', true)->first();
             
                         if (!$semestre) {
-                            throw new \Exception("Aucun semestre actif.");
+                            Notification::make()
+                                ->title('Erreur de création de semaine')
+                                ->body('Aucun semestre actif n\'a été trouvé.')
+                                ->danger()
+                                ->send();
+                            return false;
                         }
 
                         $semaines = Semaine::where('fk_semestre', $semestre->code)
@@ -182,7 +187,12 @@ class SemaineResource extends Resource
                         $date_fin = $date_debut->copy()->addDays(6);
             
                         if ($date_fin->gt($semestre->fin)) {
-                            throw new \Exception("Cette semaine dépasse la fin du semestre.");
+                            Notification::make()
+                                ->title('Erreur de création de semaine')
+                                ->body('La semaine n\'a pas pu être créée car elle dépasse la fin du semestre.')
+                                ->danger()
+                                ->send();
+                            return false;
                         }
             
                         Semaine::create([
