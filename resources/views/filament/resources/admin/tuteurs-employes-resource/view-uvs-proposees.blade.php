@@ -36,7 +36,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                     @foreach($this->getEmployedTutorsData() as $tutor)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <tr class="">
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $tutor->firstName ?? '-' }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $tutor->lastName ?? '-' }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
@@ -114,7 +114,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                     @foreach($this->getVolunteerTutorsData() as $tutor)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <tr class="">
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $tutor->firstName ?? '-' }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $tutor->lastName ?? '-' }}</td>
                                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
