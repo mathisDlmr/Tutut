@@ -4,6 +4,7 @@ return [
     'tuteurs_employes' => [
         'label' => 'gestion Comptes',
         'plural_label' => 'Gestion Comptes',
+        'create_label' => 'Créer un compte',
         'fields' => [
             'email' => 'Adresse Email',
             'role' => 'Rôle',
@@ -422,10 +423,10 @@ return [
             ],
             'roles' => [
                 'administrator' => 'Administrateur',
-                'employed_privileged_tutor' => 'Tuteur privilégié employé',
-                'employed_tutor' => 'Tuteur employé',
-                'tutor' => 'Tuteur',
-                'tutee' => 'Élève',
+                'employed_privileged_tutor' => 'Tuteur.ice employé.e privilégié.e',
+                'employed_tutor' => 'Tuteur.ice employé.e',
+                'tutor' => 'Tuteur.ice',
+                'tutee' => 'Tutoré.e',
             ],
             'buttons' => [
                 'preview' => 'Aperçu',

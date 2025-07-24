@@ -4,6 +4,7 @@ return [
     'tuteurs_employes' => [
         'label' => 'Account Management',
         'plural_label' => 'Account Management',
+        'create_label' => 'Create an account',
         'fields' => [
             'email' => 'Email Address',
             'role' => 'Role',
