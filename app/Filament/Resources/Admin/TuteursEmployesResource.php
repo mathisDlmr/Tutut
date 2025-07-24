@@ -13,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Filters\MultiSelectFilter;
 
 /**
@@ -26,6 +27,7 @@ use Filament\Tables\Filters\MultiSelectFilter;
  * - Filtrage par rôle
  * - Promotion/rétrogradation des tuteurs employés
  * - Suppression de tuteurs (rétrogradation au statut de tutoré)
+ * - Consultation des UVs proposées par les tuteurs
  */
 class TuteursEmployesResource extends Resource
 {
@@ -57,13 +59,12 @@ class TuteursEmployesResource extends Resource
     {
         return $form
             ->schema([
-                TagsInput::make('emails')
+                TagsInput::make('email')
                     ->label(__('resources.tuteurs_employes.fields.email'))
                     ->helperText('Entrer une ou plusieurs adresses email en appuyant sur Entrée entre chaque adresse.')
                     ->placeholder('email1@example.com, email2@example.com...')
                     ->required()
-                    ->separator(',')
-                    ->unique(),
+                    ->separator(','),
                 Select::make('role')
                     ->label(__('resources.tuteurs_employes.fields.role'))
                     ->options([
@@ -111,14 +112,28 @@ class TuteursEmployesResource extends Resource
                         Roles::EmployedTutor->value,
                         Roles::EmployedPrivilegedTutor->value,
                     ])
-            ])            
+            ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->color('info'),
                 Tables\Actions\DeleteAction::make()
                     ->label(__('resources.tuteurs_employes.actions.delete'))
                     ->visible(fn (User $record) => $record->role !== Roles::Tutee->value)
-                    ->action(fn (User $record) => $record->update(['role' => Roles::Tutee->value])),
+                    ->action(function (User $record) {
+                        if ($record->role === Roles::Administrator->value) {
+                            $adminCount = User::where('role', Roles::Administrator->value)->count();
+                            if ($adminCount <= 1) {
+                                Notification::make()
+                                    ->title('Impossible')
+                                    ->body('Cet utilisateur est le dernier administrateur de la plateforme.')
+                                    ->danger()
+                                    ->send();
+
+                                return false;
+                            }
+                        }
+                        $record->update(['role' => Roles::Tutee->value]);
+                    }), 
                 Tables\Actions\Action::make('upgrade')
                     ->label(__('resources.tuteurs_employes.actions.upgrade'))
                     ->icon('heroicon-o-user-plus')
@@ -151,6 +166,7 @@ class TuteursEmployesResource extends Resource
             'index' => Pages\ListTuteursEmployes::route('/'),
             'create' => Pages\CreateTuteursEmployes::route('/create'),
             'edit' => Pages\EditTuteursEmployes::route('/{record}/edit'),
+            'uvs' => Pages\ViewUvsProposees::route('/uvs'),
         ];
     }
 }

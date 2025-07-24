@@ -168,14 +168,14 @@ class CreateTutorComptabilite extends CreateRecord
                 );
             }
     
-            \App\Models\HeuresSupplementaires::where('user_id', $user->id)
-                ->where('semaine_id', $semaine->id)
+            \App\Models\HeuresSupplementaires::where('fk_user', $user->id)
+                ->where('fk_semaine', $semaine->id)
                 ->delete();
     
             foreach ($heuresSupp as $heureSupp) {
                 \App\Models\HeuresSupplementaires::create([
-                    'user_id' => $user->id,
-                    'semaine_id' => $semaine->id,
+                    'fk_user' => $user->id,
+                    'fk_semaine' => $semaine->id,
                     'nb_heures' => $heureSupp['nb_heures'],
                     'commentaire' => $heureSupp['commentaire'],
                 ]);

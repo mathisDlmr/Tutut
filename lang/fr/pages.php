@@ -11,7 +11,7 @@ return [
         'columns' => [
             'semaines_heures' => [
                 'semaine' => 'Semaine',
-                'no_results' => 'Aucun résultat disponible',
+                'no_results' => 'Toutes les heures sur ce mois ont déjà été saisies.',
             ],
             'total_heures' => [
                 'total' => 'Total',

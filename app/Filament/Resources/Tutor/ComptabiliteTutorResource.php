@@ -138,9 +138,14 @@ class ComptabiliteTutorResource extends Resource
     
                     $filterUncounted = $get('filter_uncounted') ?? false;
     
-                    $semaines = \App\Models\Semaine::where('fk_semestre', $semestreActif->code)
-                        ->orderByDesc('numero')
-                        ->get();
+                    $semainesQuery = \App\Models\Semaine::where('fk_semestre', $semestreActif->code);
+                    $semainesQuery->whereNotIn('id', function ($query) use ($user) {  // N'afficher que les semaines pas encore saisies
+                        $query->select('fk_semaine')
+                            ->from('comptabilite')
+                            ->where('fk_user', $user->id)
+                            ->where('saisie', true);
+                    });
+                    $semaines = $semainesQuery->orderByDesc('numero')->get();
     
                     $allCreneaux = \App\Models\Creneaux::with(['salle', 'inscriptions', 'semaine'])
                         ->where(function ($q) use ($user) {
@@ -150,6 +155,16 @@ class ComptabiliteTutorResource extends Resource
                         ->whereHas('inscriptions')
                         ->get()
                         ->groupBy('fk_semaine');
+                    
+                    $semaines = $semaines->filter(function ($semaine) use ($user, $allCreneaux) {    // Et on filtre sur les semaines qui ont des créneaux
+                        $hasCreneaux = $allCreneaux->has($semaine->id);
+
+                        $hasHeuresSupp = \App\Models\HeuresSupplementaires::where('fk_user', $user->id)
+                            ->where('fk_semaine', $semaine->id)
+                            ->exists();
+
+                        return $hasCreneaux || $hasHeuresSupp;
+                    });
     
                     return $semaines->map(function ($semaine) use ($allCreneaux, $user, $filterUncounted) {
                         $creneaux = $allCreneaux[$semaine->id] ?? collect();
@@ -161,8 +176,8 @@ class ComptabiliteTutorResource extends Resource
                             });
                         }
     
-                        $heuresSupp = \App\Models\HeuresSupplementaires::where('user_id', $user->id)
-                            ->where('semaine_id', $semaine->id)
+                        $heuresSupp = \App\Models\HeuresSupplementaires::where('fk_user', $user->id)
+                            ->where('fk_semaine', $semaine->id)
                             ->get()
                             ->map(fn ($heure) => [
                                 'nb_heures' => $heure->nb_heures,

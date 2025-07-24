@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('semaines', function (Blueprint $table) {
             $table->id();
-            $table->unsignedTinyInteger('numero'); // 1 à 15
-            $table->foreignId('fk_semestre')->constrained('semestres', 'code');
+            $table->string('numero'); // 1 à 15
+            $table->string('fk_semestre', 3);
+            $table->foreign('fk_semestre')->references('code')->on('semestres')->onDelete('cascade');
             $table->date('date_debut')->nullable();
             $table->date('date_fin')->nullable();
             $table->boolean('is_vacances')->default(false);

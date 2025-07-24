@@ -291,8 +291,8 @@ class ComptabiliteResource extends Resource
                             foreach ($relevantSemaines as $semaine) {
                                 $compta = $comptabilites->get($semaine->id);
 
-                                $heuresSupplementaires = HeuresSupplementaires::where('user_id', $user->id)
-                                    ->where('semaine_id', $semaine->numero)
+                                $heuresSupplementaires = HeuresSupplementaires::where('fk_user', $user->id)
+                                    ->where('fk_semaine', $semaine->numero)
                                     ->get();
 
                                 if ($compta && $compta->nb_heures > 0) {
@@ -339,7 +339,7 @@ class ComptabiliteResource extends Resource
                 'xl' => 4,
             ])
             ->actions([
-                Action::make('mdodifier')
+                Action::make('modifier')
                     ->label('Modifier')
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')
@@ -374,8 +374,8 @@ class ComptabiliteResource extends Resource
                             }
                             
                             if ($totalHeures > 0) {
-                                $heuresSupplementaires = HeuresSupplementaires::where('user_id', $record->id)
-                                    ->where('semaine_id', $semaine->numero)
+                                $heuresSupplementaires = HeuresSupplementaires::where('fk_user', $record->id)
+                                    ->where('fk_semaine', $semaine->numero)
                                     ->get();
                 
                                 $heuresSupplementairesItems = [];
@@ -418,6 +418,7 @@ class ComptabiliteResource extends Resource
                                                 ->default($heuresSupplementairesItems ?? [])
                                                 ->collapsible()
                                                 ->collapsed()
+                                                ->addActionLabel('Déclarer une nouvelle heure supplémentaire')
                                                 ->itemLabel(fn (array $state): ?string => 
                                                     isset($state['nb_heures']) ? "{$state['nb_heures']} heure(s) - {$state['commentaire']}" : null
                                                 )
@@ -444,14 +445,14 @@ class ComptabiliteResource extends Resource
                                     $comptabilite->commentaire_bve = $data["commentaire_bve_{$semaine->id}"];
                                 }
                                 
-                                $oldHeuresSupp = HeuresSupplementaires::where('user_id', $record->id)
-                                    ->where('semaine_id', $semaine->numero)
+                                $oldHeuresSupp = HeuresSupplementaires::where('fk_user', $record->id)
+                                    ->where('fk_semaine', $semaine->numero)
                                     ->get();
                                 
                                 $oldTotalHeures = $oldHeuresSupp->sum('nb_heures');
                                 
-                                HeuresSupplementaires::where('user_id', $record->id)
-                                    ->where('semaine_id', $semaine->numero)
+                                HeuresSupplementaires::where('fk_user', $record->id)
+                                    ->where('fk_semaine', $semaine->numero)
                                     ->delete();
                                 
                                 $newTotalHeures = 0;
@@ -460,8 +461,8 @@ class ComptabiliteResource extends Resource
                                     foreach ($data["heures_supp_{$semaine->id}"] as $index => $heureSupp) {
                                         if (isset($heureSupp['nb_heures']) && isset($heureSupp['commentaire']) && floatval($heureSupp['nb_heures']) > 0) {
                                             HeuresSupplementaires::create([
-                                                'user_id' => $record->id,
-                                                'semaine_id' => $semaine->numero,
+                                                'fk_user' => $record->id,
+                                                'fk_semaine' => $semaine->numero,
                                                 'nb_heures' => floatval($heureSupp['nb_heures']),
                                                 'commentaire' => $heureSupp['commentaire'],
                                             ]);

@@ -11,7 +11,7 @@ class HeuresSupplementaires extends Model
 
     protected $table = 'heures_supplementaires';
 
-    protected $fillable = ['user_id', 'semaine_id', 'nb_heures', 'commentaire'];   
+    protected $fillable = ['fk_user', 'fk_semaine', 'nb_heures', 'commentaire'];   
 
     public function user()
     {
@@ -20,6 +20,6 @@ class HeuresSupplementaires extends Model
     
     public function semaine()
     {
-        return $this->belongsTo(Semaine::class, 'semaine_id', 'numero'); 
+        return $this->belongsTo(Semaine::class, 'fk_semaine', 'numero'); 
     }
 }

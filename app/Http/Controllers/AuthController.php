@@ -29,11 +29,12 @@ class AuthController extends Controller
     {
         if (config('auth.app_no_login', false)) {
             try {
-                $userID=env('USER_ID');
-                $user=User::find($userID);
-                Auth::login($user);
-
-                return redirect(RouteServiceProvider::HOME);
+                $userID = config('auth.auto_user_id');
+                $user = User::find($userID);
+                if ($user) {
+                    Auth::login($user);
+                    return redirect(RouteServiceProvider::HOME);
+                }
             } catch (\Exception $e) {
                 return response()->json(['message' => 'Login error :'. $e->getMessage()], 400);
             }

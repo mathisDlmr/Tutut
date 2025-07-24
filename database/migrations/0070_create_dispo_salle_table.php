@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('dispo_salle', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fk_salle')->constrained('salles', 'numero')->onDelete('cascade');
+            $table->string('fk_salle', 4);
+            $table->foreign('fk_salle')->references('numero')->on('salles')->onDelete('cascade');
             $table->enum('jour', ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Médians', 'Finaux']);
             $table->time('debut');
             $table->time('fin');

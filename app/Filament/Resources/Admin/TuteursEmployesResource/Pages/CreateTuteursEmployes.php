@@ -30,7 +30,7 @@ class CreateTuteursEmployes extends CreateRecord
      */
     protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
     {
-        $emails = is_string($data['emails']) ? explode(',', $data['emails']) : $data['emails'];    
+        $emails = is_string($data['email']) ? explode(',', $data['email']) : $data['email'];    
         $emails = array_map('trim', $emails);
         $role = $data['role'];
         $createdUsers = collect();

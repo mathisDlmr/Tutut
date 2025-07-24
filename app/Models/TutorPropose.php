@@ -12,4 +12,14 @@ class TutorPropose extends Model
     protected $table = 'tutor_propose';
 
     protected $fillable = ['fk_user','fk_code'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'fk_user');
+    }
+
+    public function uv()
+    {
+        return $this->belongsTo(UV::class, 'fk_code', 'code');
+    }
 }

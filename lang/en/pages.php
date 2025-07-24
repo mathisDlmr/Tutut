@@ -11,7 +11,7 @@ return [
         'columns' => [
             'semaines_heures' => [
                 'semaine' => 'Week',
-                'no_results' => 'No results available',
+                'no_results' => 'All hours for this month have already been entered.',
             ],
             'total_heures' => [
                 'total' => 'Total',
