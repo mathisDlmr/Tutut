@@ -24,7 +24,13 @@ class ListTuteursEmployes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->icon('heroicon-o-plus'),
+            Actions\Action::make('view_uvs')
+                ->label('Voir les UVs proposées')
+                ->icon('heroicon-o-academic-cap')
+                ->color('info')
+                ->url('/admin/tuteurs-employes/uvs')
         ];
     }
 }

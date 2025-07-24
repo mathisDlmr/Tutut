@@ -27,6 +27,7 @@ use Filament\Tables\Filters\MultiSelectFilter;
  * - Filtrage par rôle
  * - Promotion/rétrogradation des tuteurs employés
  * - Suppression de tuteurs (rétrogradation au statut de tutoré)
+ * - Consultation des UVs proposées par les tuteurs
  */
 class TuteursEmployesResource extends Resource
 {
@@ -111,7 +112,7 @@ class TuteursEmployesResource extends Resource
                         Roles::EmployedTutor->value,
                         Roles::EmployedPrivilegedTutor->value,
                     ])
-            ])            
+            ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->color('info'),
@@ -165,6 +166,7 @@ class TuteursEmployesResource extends Resource
             'index' => Pages\ListTuteursEmployes::route('/'),
             'create' => Pages\CreateTuteursEmployes::route('/create'),
             'edit' => Pages\EditTuteursEmployes::route('/{record}/edit'),
+            'uvs' => Pages\ViewUvsProposees::route('/uvs'),
         ];
     }
 }
