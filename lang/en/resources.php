@@ -527,5 +527,8 @@ return [
                 'no_active_semester_message' => "There is no active semester. Please activate one in the semester settings.",
             ],
         ],
+        'help' => [
+            'title' => 'Guide',
+        ],
     ],
 ];
